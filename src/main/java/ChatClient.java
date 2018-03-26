@@ -1,7 +1,7 @@
-public class HTTPChatClient implements Client {
+public class ChatClient implements Client {
 
-    public void connect(Server server) {
-
+    public boolean connect(Server server) {
+        return true;
 
     }
 
