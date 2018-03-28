@@ -14,7 +14,7 @@ public class ChatApplicationTest {
 
         client.connect(server);
 
-        client.talk(server, message);
+        client.sendMessage(server, message);
 
        //  server.respond(client, message);
 
@@ -28,9 +28,9 @@ public class ChatApplicationTest {
         Client client = new ChatClient();
         Message messageSentFromClient = new TextMessage("Hello World!");
 
-        client.connect(server);
+//        client.connect(server);
 
-        client.talk(server, messageSentFromClient);
+        client.sendMessage(server, messageSentFromClient);
 
         String response = server.respond(client, messageSentFromClient).forDisplay();
 

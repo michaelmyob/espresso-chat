@@ -1,12 +1,16 @@
+import java.io.IOException;
+import java.net.Socket;
+
 public class ChatClient implements Client {
+
+
 
     public boolean connect(Server server) {
         return true;
-
     }
 
 
-    public void talk(Server server, Message message) {
+    public void sendMessage(Server server, Message message) {
 
     }
 
