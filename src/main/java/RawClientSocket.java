@@ -1,28 +1,39 @@
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.Socket;
 
 public class RawClientSocket {
 
     public static void main(String[] args) throws IOException{
 
-        Socket clientSocket = new Socket("localhost", 3000);
-        System.out.println("[CLIENT] clientSocket has been created at localhost:3000");
+//        Socket clientSocket = new Socket("localhost", 3000);
+//        System.out.println("[CLIENT] clientSocket has been created at localhost:3000");
+//
+//        PrintWriter outToServer = new PrintWriter(clientSocket.getOutputStream());
+//        outToServer.print("Hello, coffee is really goooood!");
+//
+//        outToServer.close();
+//
+//        BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+//        System.out.println("[CLIENT] Server Says: " + inFromServer.readLine());
+//
+//        clientSocket.close();
 
-        DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
-        System.out.println("[CLIENT] output stream made");
+        Socket echoSocket = new Socket("localhost", 3000);
+        OutputStream os = echoSocket.getOutputStream();
+        DataInputStream is = new DataInputStream(echoSocket.getInputStream());
 
-        BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        System.out.println("[CLIENT] input stream made");
+        int c;
 
-        outToServer.writeBytes("Hello, coffee is really goooood!");
-        outToServer.flush();
-        outToServer.close();
-//        System.out.println(inFromServer.readLine());
+        while ((c = System.in.read()) != -1) {
+            os.write((byte)c);
+            if (c == '\n') {
+                os.flush();
+            }
+        }
 
-        clientSocket.close();
+        os.close();
+        is.close();
+        echoSocket.close();
     }
 
 }
