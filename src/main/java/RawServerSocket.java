@@ -9,7 +9,7 @@ public class RawServerSocket {
     private String host;
 
     public RawServerSocket() {
-        this.port = 3000;
+        this.port = 30000;
         this.host = "localhost";
     }
 
@@ -23,6 +23,7 @@ public class RawServerSocket {
         this.host = host;
     }
 
+
     public int getPort() {
         return port;
     }
@@ -32,54 +33,39 @@ public class RawServerSocket {
     }
 
     public void listen() throws IOException {
-//        ServerSocket socket = new ServerSocket(getPort());
-//        System.out.println("Server is running...");
-//        String clientMessage;
-//
-//        Socket connectionSocket = socket.accept();
-//
-//        BufferedReader inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
-//        clientMessage = inFromClient.readLine();
-//        System.out.println("[SERVER] clientMessage from input stream: " + clientMessage);
-//
-//        inFromClient.close();
-//
-//        PrintWriter outToClient = new PrintWriter(connectionSocket.getOutputStream());
-//        outToClient.print("Msg from server - Hey I have received your message : " + clientMessage);
-//
-//        outToClient.close();
-//
-//        connectionSocket.close();
-
-        ServerSocket socket = new ServerSocket(getPort());
-        System.out.println("Server is running...");
-
-        Socket connectionSocket = socket.accept();
-
-        OutputStream os = connectionSocket.getOutputStream();
-        DataInputStream is = new DataInputStream(connectionSocket.getInputStream());
-
-        String c;
-        String responseLine;
-
-        while (true) {
-
-            responseLine = is.readLine();
-            System.out.println("echo: " + responseLine);
-
-
-        }
-
-
-//        os.close();
-//        is.close();
-//        connectionSocket.close();
 
     }
 
 
+
     public static void main(String[] args) throws IOException {
         RawServerSocket server = new RawServerSocket();
-        server.listen();
+//        server.listen();
+
+        ServerSocket socket = new ServerSocket(server.getPort());
+        System.out.println("Server is running and ready for chatting...");
+        Socket connectionSocket = socket.accept();
+
+        BufferedReader readFromKeyboard = new BufferedReader(new InputStreamReader(System.in));
+
+        OutputStream outputStream = connectionSocket.getOutputStream();
+        PrintWriter writeToClient = new PrintWriter(outputStream, true);
+
+        InputStream inputStream = connectionSocket.getInputStream();
+        BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
+
+        String messageReceivedFromClient, messageSentToClient;
+
+
+        while (true) {
+            if ((messageReceivedFromClient = readFromClient.readLine()) != null) {
+                System.out.println("Client says: " + messageReceivedFromClient);
+            }
+
+            messageSentToClient = readFromKeyboard.readLine();
+            writeToClient.println(messageSentToClient);
+            writeToClient.flush();
+        }
+
     }
 }

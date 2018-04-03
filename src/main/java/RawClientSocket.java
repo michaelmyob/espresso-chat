@@ -5,35 +5,36 @@ public class RawClientSocket {
 
     public static void main(String[] args) throws IOException{
 
-//        Socket clientSocket = new Socket("localhost", 3000);
-//        System.out.println("[CLIENT] clientSocket has been created at localhost:3000");
-//
-//        PrintWriter outToServer = new PrintWriter(clientSocket.getOutputStream());
-//        outToServer.print("Hello, coffee is really goooood!");
-//
-//        outToServer.close();
-//
-//        BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-//        System.out.println("[CLIENT] Server Says: " + inFromServer.readLine());
-//
-//        clientSocket.close();
+        Socket socket = new Socket("localhost", 30000);
 
-        Socket echoSocket = new Socket("localhost", 3000);
-        OutputStream os = echoSocket.getOutputStream();
-        DataInputStream is = new DataInputStream(echoSocket.getInputStream());
+        BufferedReader readFromKeyboard = new BufferedReader(new InputStreamReader(System.in));
 
-        int c;
+        OutputStream outputStream = socket.getOutputStream();
+        PrintWriter writeToServer = new PrintWriter(outputStream, true);
 
-        while ((c = System.in.read()) != -1) {
-            os.write((byte)c);
-            if (c == '\n') {
-                os.flush();
+
+        InputStream inputStream = socket.getInputStream();
+        BufferedReader readFromServer = new BufferedReader(new InputStreamReader(inputStream));
+
+        System.out.println("Start the chat, type and press Enter key");
+
+        String messageReceivedFromServer, messageSentToServer;
+
+        while(true)
+        {
+            messageSentToServer = readFromKeyboard.readLine();
+            writeToServer.println(messageSentToServer);
+            writeToServer.flush();
+
+            if((messageReceivedFromServer = readFromServer.readLine()) != null)
+            {
+                System.out.println("Server says: " + messageReceivedFromServer);
             }
         }
 
-        os.close();
-        is.close();
-        echoSocket.close();
+
+
+
     }
 
 }
