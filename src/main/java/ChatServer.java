@@ -1,13 +1,21 @@
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ChatServer implements Server {
 
     private String IPaddress;
     private int port;
-    private ConcurrentHashMap clientsMap;
+    private Map clientsMap;
+
+    public ChatServer() {
+    }
+
+    public ChatServer(Map clients) {
+        clientsMap = clients;
+    }
 
     public String getIPaddress() {
         return IPaddress;
