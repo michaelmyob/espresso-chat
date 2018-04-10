@@ -4,13 +4,15 @@ public class EspressoChat {
 
     public static void main(String[] args) throws IOException {
 
-        System.out.println("args: " + args[0]);
-        System.out.println("args: " + args[1]);
-
         if (args.length == 1) {
-            Server server = new ChatServer();
+            Server server = new ChatServer(Integer.parseInt(args[0]));
+            server.run();
+        } else if (args.length == 2){
+            Client client = new ChatClient(args[0], Integer.parseInt(args[1]));
+            client.start();
         } else {
-            Client client = new ChatClient();
+            System.out.println("Incorrect startup arguments");
+            System.exit(1);
         }
 
     }

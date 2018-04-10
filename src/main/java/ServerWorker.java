@@ -1,13 +1,13 @@
 import java.io.*;
 import java.net.Socket;
 
-public class Worker {
+public class ServerWorker implements Runnable{
 
     //        ServerSocket socket = new ServerSocket(this.getPort());
 //        Socket connectionSocket = socket.accept();
     Socket connectionSocket;
 
-    public ServerListener(Socket connectionSocket) throws IOException {
+    public ServerWorker(Socket connectionSocket) throws IOException {
         this.connectionSocket = connectionSocket;
     }
 
