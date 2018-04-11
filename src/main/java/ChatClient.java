@@ -19,25 +19,21 @@ public class ChatClient implements Client {
 
         BufferedReader readFromKeyboard = new BufferedReader(new InputStreamReader(System.in));
 
-        OutputStream outputStream = socket.getOutputStream();
-        PrintWriter writeToServer = new PrintWriter(outputStream, true);
-
-
         InputStream inputStream = socket.getInputStream();
         BufferedReader readFromServer = new BufferedReader(new InputStreamReader(inputStream));
 
         System.out.println("Start the chat, type and press Enter key");
 
-        String messageReceivedFromServer, messageSentToServer;
+        Message messageReceivedFromServer, messageSentToServer;
 
         while (true) {
-            if((messageReceivedFromServer = readFromServer.readLine()) != null)
+            if((messageReceivedFromServer = new TextMessage(readFromServer.readLine())) != null)
             {
                 System.out.println("Server says: " + messageReceivedFromServer);
             }
-            messageSentToServer = readFromKeyboard.readLine();
-            writeToServer.println(messageSentToServer);
-            writeToServer.flush();
+
+            messageSentToServer = new TextMessage(readFromKeyboard.readLine());
+            ChatUtilities.sendAMessageThroughSocket(socket, messageSentToServer);
 
         }
     }

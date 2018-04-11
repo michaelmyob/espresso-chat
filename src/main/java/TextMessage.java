@@ -9,7 +9,7 @@ public class TextMessage implements Message {
     }
 
     @Override
-    public String forDisplay() {
+    public String toString() {
         return messageContents;
     }
 }

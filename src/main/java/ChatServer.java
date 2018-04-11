@@ -88,34 +88,30 @@ public class ChatServer implements Server, Runnable {
             try {
                 clientSocket = socket.accept();
 
-                OutputStream outputStream = clientSocket.getOutputStream();
-                PrintWriter writeToClient = new PrintWriter(outputStream, true);
-
                 InputStream inputStream = clientSocket.getInputStream();
                 BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
 
                 String messageReceivedFromClient, messageSentToClient, clientNickName;
 
                 while (true) {
-                    writeToClient.println("Please choose a nickname: ");
-                    writeToClient.flush();
+                    Message msg = new TextMessage("Please choose a nickname: ");
+                    ChatUtilities.sendAMessageThroughSocket(clientSocket, msg);
 
                     if ((clientNickName = readFromClient.readLine()) != null) {
-
-                        writeToClient.println("nickname set as: " + clientNickName);
-                        writeToClient.flush();
 
                         InetSocketAddress addressToStore =
                                 new InetSocketAddress(clientSocket.getInetAddress(), clientSocket.getPort());
                         if (register(clientNickName, addressToStore)) {
                             break;
                         }
+                        else {
+                            msg = new TextMessage("Nickname exists in the database, please choose another nickname");
+                            ChatUtilities.sendAMessageThroughSocket(clientSocket, msg);
+                        }
                     }
                 }
-//                    System.out.println("Client from address " + connectionSocket.getRemoteSocketAddress() + " connected");
 
 
-                System.out.println("New socket connection accepted");
             } catch (IOException e) {
 
                 throw new RuntimeException(
@@ -124,7 +120,6 @@ public class ChatServer implements Server, Runnable {
 
             try {
                 new Thread(new ServerWorker(clientSocket)).start();
-                System.out.println("[Server] Thread is now created");
             } catch (IOException e) {
 
             }
