@@ -1,7 +1,9 @@
 
-import java.io.IOException;
+import java.io.*;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -17,8 +19,7 @@ public class ChatServer implements Server, Runnable {
     public ChatServer(int port) {
         if (port == 0) {
             this.port = DEFAULT_PORT;
-        }
-        else {
+        } else {
             this.port = port;
         }
         this.IPaddress = DEFAULT_IP_ADDRESS;
@@ -38,7 +39,12 @@ public class ChatServer implements Server, Runnable {
     }
 
 
-    private boolean register() {
+    public boolean register(String clientNickName, InetSocketAddress clientSocketAddress) {
+        if (clientsMap.containsKey(clientNickName)) {
+            System.out.println("Client exists, please choose another nick name");
+            return false;
+        }
+        clientsMap.put(clientNickName, clientSocketAddress);
         return true;
     }
 
@@ -57,7 +63,7 @@ public class ChatServer implements Server, Runnable {
     public boolean send(String clientName, Message message) {
 
         if (clientsMap.containsKey(clientName)) {
-            String clientSocketAddress = (String)clientsMap.get(clientName);
+            String clientSocketAddress = (String) clientsMap.get(clientName);
         } else {
             System.out.println("Error :( Client not found");
             return false;
@@ -65,8 +71,6 @@ public class ChatServer implements Server, Runnable {
 
         return true;
     }
-
-
 
 
     public void run() {
@@ -83,6 +87,34 @@ public class ChatServer implements Server, Runnable {
             Socket clientSocket = null;
             try {
                 clientSocket = socket.accept();
+
+                OutputStream outputStream = clientSocket.getOutputStream();
+                PrintWriter writeToClient = new PrintWriter(outputStream, true);
+
+                InputStream inputStream = clientSocket.getInputStream();
+                BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
+
+                String messageReceivedFromClient, messageSentToClient, clientNickName;
+
+                while (true) {
+                    writeToClient.println("Please choose a nickname: ");
+                    writeToClient.flush();
+
+                    if ((clientNickName = readFromClient.readLine()) != null) {
+
+                        writeToClient.println("nickname set as: " + clientNickName);
+                        writeToClient.flush();
+
+                        InetSocketAddress addressToStore =
+                                new InetSocketAddress(clientSocket.getInetAddress(), clientSocket.getPort());
+                        if (register(clientNickName, addressToStore)) {
+                            break;
+                        }
+                    }
+                }
+//                    System.out.println("Client from address " + connectionSocket.getRemoteSocketAddress() + " connected");
+
+
                 System.out.println("New socket connection accepted");
             } catch (IOException e) {
 
@@ -92,12 +124,12 @@ public class ChatServer implements Server, Runnable {
 
             try {
                 new Thread(new ServerWorker(clientSocket)).start();
+                System.out.println("[Server] Thread is now created");
             } catch (IOException e) {
 
             }
         }
     }
-
 
 
 }

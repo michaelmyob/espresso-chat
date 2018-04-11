@@ -11,6 +11,8 @@ public class ServerWorker implements Runnable{
         this.connectionSocket = connectionSocket;
     }
 
+
+
     public void run() {
 
         try {
@@ -22,17 +24,27 @@ public class ServerWorker implements Runnable{
             InputStream inputStream = connectionSocket.getInputStream();
             BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
 
-            String messageReceivedFromClient, messageSentToClient;
+            String messageReceivedFromClient, messageSentToClient, clientNickName;
 
 
             while (true) {
                 if (!connectionSocket.isClosed() && connectionSocket != null) {
-                    System.out.println("Client from address " + connectionSocket.getRemoteSocketAddress() + " connected");
-                }
-                if ((messageReceivedFromClient = readFromClient.readLine()) != null) {
 
-                    System.out.println("Client says: " + messageReceivedFromClient);
+                    System.out.println("Hooray, client is now connected and registered!");
+                    writeToClient.println("Great, you are now registered! Please choose from options below: ");
+                    writeToClient.flush();
+////                    String nickname = readFromClient.readLine();
+//                    if ((clientNickName = readFromClient.readLine()) != null) {
+//
+//                        writeToClient.println("nickname set as: " + clientNickName);
+//
+//                        writeToClient.flush();
+//                    }
+
+
+//                    System.out.println("Client from address " + connectionSocket.getRemoteSocketAddress() + " connected");
                 }
+
 
                 messageSentToClient = readFromKeyboard.readLine();
                 writeToClient.println(messageSentToClient);

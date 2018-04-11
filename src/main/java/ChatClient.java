@@ -13,7 +13,7 @@ public class ChatClient implements Client {
 //        new ChatServer(destinationPort);
     }
 
-    public void start() throws IOException {
+    public void startClient() throws IOException {
 
         Socket socket = new Socket(destinationIP, destinationPort);
 
@@ -31,14 +31,14 @@ public class ChatClient implements Client {
         String messageReceivedFromServer, messageSentToServer;
 
         while (true) {
-            messageSentToServer = readFromKeyboard.readLine();
-            writeToServer.println(messageSentToServer);
-            writeToServer.flush();
-
             if((messageReceivedFromServer = readFromServer.readLine()) != null)
             {
                 System.out.println("Server says: " + messageReceivedFromServer);
             }
+            messageSentToServer = readFromKeyboard.readLine();
+            writeToServer.println(messageSentToServer);
+            writeToServer.flush();
+
         }
     }
 
