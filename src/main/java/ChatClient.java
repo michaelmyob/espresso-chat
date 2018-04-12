@@ -13,26 +13,27 @@ public class ChatClient implements Client {
 //        new ChatServer(destinationPort);
     }
 
-    public void startClient() throws IOException {
+    public void startClient() throws IOException, ClassNotFoundException {
 
         Socket socket = new Socket(destinationIP, destinationPort);
 
         BufferedReader readFromKeyboard = new BufferedReader(new InputStreamReader(System.in));
 
         InputStream inputStream = socket.getInputStream();
-        BufferedReader readFromServer = new BufferedReader(new InputStreamReader(inputStream));
+//        BufferedReader readFromServer = new BufferedReader(new InputStreamReader(inputStream));
+
+        ObjectInputStream readFromServer = new ObjectInputStream(inputStream);
 
         System.out.println("Start the chat, type and press Enter key");
 
-        Message messageReceivedFromServer, messageSentToServer;
+        Message messageReceivedFromServer;
 
         while (true) {
-            if((messageReceivedFromServer = new TextMessage(readFromServer.readLine())) != null)
-            {
-                System.out.println("Server says: " + messageReceivedFromServer);
+            if ((messageReceivedFromServer = (TextMessage)readFromServer.readObject()) != null) {
+                System.out.println("Server says: " + messageReceivedFromServer.toString());
             }
+            Message messageSentToServer = new TextMessage(readFromKeyboard.readLine());
 
-            messageSentToServer = new TextMessage(readFromKeyboard.readLine());
             ChatUtilities.sendAMessageThroughSocket(socket, messageSentToServer);
 
         }

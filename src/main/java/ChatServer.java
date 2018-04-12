@@ -3,7 +3,6 @@ import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -14,7 +13,7 @@ public class ChatServer implements Server, Runnable {
 
     private String IPaddress;
     private int port;
-    private Map clientsMap;
+    private static Map clientsMap;
 
     public ChatServer(int port) {
         if (port == 0) {
@@ -23,7 +22,7 @@ public class ChatServer implements Server, Runnable {
             this.port = port;
         }
         this.IPaddress = DEFAULT_IP_ADDRESS;
-        clientsMap = new ConcurrentHashMap();
+        clientsMap = new ConcurrentHashMap<String, InetSocketAddress>();
     }
 
     public String getIP() {
@@ -39,7 +38,7 @@ public class ChatServer implements Server, Runnable {
     }
 
 
-    public boolean register(String clientNickName, InetSocketAddress clientSocketAddress) {
+    public synchronized boolean register(String clientNickName, InetSocketAddress clientSocketAddress) {
         if (clientsMap.containsKey(clientNickName)) {
             System.out.println("Client exists, please choose another nick name");
             return false;
@@ -48,29 +47,16 @@ public class ChatServer implements Server, Runnable {
         return true;
     }
 
-    public void listen(int port) throws IOException {
-
-        ServerSocket serverSocket = new ServerSocket(port);
-        Socket socket = serverSocket.accept();
-
-        System.out.println("Server is up...");
-
-
-        socket.close();
-
-    }
-
-    public boolean send(String clientName, Message message) {
-
+    public InetSocketAddress lookupClient(String clientName) {
         if (clientsMap.containsKey(clientName)) {
-            String clientSocketAddress = (String) clientsMap.get(clientName);
+            return (InetSocketAddress) clientsMap.get(clientName);
+
         } else {
             System.out.println("Error :( Client not found");
-            return false;
+            return null;
         }
-
-        return true;
     }
+
 
 
     public void run() {
@@ -88,7 +74,7 @@ public class ChatServer implements Server, Runnable {
             try {
                 clientSocket = socket.accept();
 
-                InputStream inputStream = clientSocket.getInputStream();
+                ObjectInputStream inputStream = new ObjectInputStream(clientSocket.getInputStream());
                 BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
 
                 String messageReceivedFromClient, messageSentToClient, clientNickName;
@@ -119,7 +105,7 @@ public class ChatServer implements Server, Runnable {
             }
 
             try {
-                new Thread(new ServerWorker(clientSocket)).start();
+                new Thread(new ChatServerWorker(clientSocket, this)).start();
             } catch (IOException e) {
 
             }

@@ -107,7 +107,7 @@
 //            }
 //
 //            try {
-//                new Thread(new ServerWorker(clientSocket)).start();
+//                new Thread(new ChatServerWorker(clientSocket)).start();
 //            } catch (IOException e) {
 //
 //            }

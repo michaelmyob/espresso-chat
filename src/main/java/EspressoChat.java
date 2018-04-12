@@ -3,7 +3,7 @@ import java.util.Properties;
 
 public class EspressoChat {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
 
         if (args.length == 1) {
 
