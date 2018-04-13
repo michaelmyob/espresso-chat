@@ -14,8 +14,8 @@ public class TextMessage implements Message, Serializable {
         return messageContents;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        return this.toString() == obj.toString();
-    }
+//    @Override
+//    public boolean equals(Object obj) {
+//        return this.equals(obj.toString());
+//    }
 }

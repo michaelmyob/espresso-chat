@@ -40,13 +40,14 @@ public class ChatServerWorker implements Runnable {
             while (true) {
                 if (!connectionSocket.isClosed() && connectionSocket != null) {
 
-                    Message msg = new TextMessage("Hooray, client is now connected and registered! Please choose from options below:");
+                    Message msg = new TextMessage("Please choose from options below:");
                     ChatUtilities.sendAMessageThroughSocket(connectionSocket, msg);
                     ChatUtilities.sendAMessageThroughSocket(connectionSocket, new TextMessage(displayOptions()));
 
                     messageReceivedFromClient = new TextMessage(readFromClient.readLine());
 
                     processClientsSelection(messageReceivedFromClient);
+
 
                 }
             }
@@ -61,23 +62,27 @@ public class ChatServerWorker implements Runnable {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("[1] List all clients online\n");
         stringBuilder.append("[2] Send a message\n");
-        stringBuilder.append("[3] Quit\n");
+        stringBuilder.append("[3] Quit");
         return stringBuilder.toString();
     }
 
     private void processClientsSelection(Message messageReceivedFromClient) throws IOException{
-        if (messageReceivedFromClient.equals("1")) {
 
-        } else if (messageReceivedFromClient.equals("2")) {
+        if (messageReceivedFromClient.toString().equals("1")) {
+
+        } else if (messageReceivedFromClient.toString().equals("2")) {
             Message msg = new TextMessage("Please enter a client name:");
             ChatUtilities.sendAMessageThroughSocket(connectionSocket, msg);
 
             InputStream inputStream = connectionSocket.getInputStream();
             BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
+
             Message clientNickName = new TextMessage(readFromClient.readLine());
+
             msg = new TextMessage("Please write a message:");
             ChatUtilities.sendAMessageThroughSocket(connectionSocket, msg);
             Message message = new TextMessage(readFromClient.readLine());
+
             send(clientNickName.toString(), message);
         }
     }
