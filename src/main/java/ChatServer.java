@@ -74,7 +74,7 @@ public class ChatServer implements Server, Runnable {
             try {
                 clientSocket = socket.accept();
 
-                ObjectInputStream inputStream = new ObjectInputStream(clientSocket.getInputStream());
+                InputStream inputStream = clientSocket.getInputStream();
                 BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
 
                 String messageReceivedFromClient, messageSentToClient, clientNickName;

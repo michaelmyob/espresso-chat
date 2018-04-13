@@ -59,9 +59,9 @@ public class ChatServerWorker implements Runnable {
 
     private String displayOptions() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("[1] List all clients online");
-        stringBuilder.append("[2] Send a message");
-        stringBuilder.append("[3] Quit");
+        stringBuilder.append("[1] List all clients online\n");
+        stringBuilder.append("[2] Send a message\n");
+        stringBuilder.append("[3] Quit\n");
         return stringBuilder.toString();
     }
 

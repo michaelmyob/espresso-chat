@@ -1,4 +1,8 @@
+import org.junit.Ignore;
 import org.junit.Test;
+
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -6,34 +10,15 @@ import static org.junit.Assert.assertTrue;
 
 public class ChatApplicationTest {
 
-    @Test
-    public void testSendAndReceiveMessage() {
-        Server server = new ChatServer();
-        Client client = new ChatClient();
-        Message message = new TextMessage("Hello World!");
-
-        client.connect(server);
-
-        client.sendMessage(server, message);
-
-       //  server.respond(client, message);
-
-        assertTrue(client.receive(message));
+    public InetSocketAddress getSampleSocketAddress(){
+        return new InetSocketAddress("localhost", 50000);
     }
 
     @Test
-    public void canAClientSendTheMessageToTheServer()
-    {
-        Server server = new ChatServer();
-        Client client = new ChatClient();
-        Message messageSentFromClient = new TextMessage("Hello World!");
-
-//        client.connect(server);
-
-        client.sendMessage(server, messageSentFromClient);
-
-        String response = server.respond(client, messageSentFromClient).forDisplay();
-
-        assertEquals(response, messageSentFromClient.forDisplay());
+    public void canClientSendAMessageToAnotherClient() {
+        Server server = new ChatServer(0);
+        server.register("sampleClient", getSampleSocketAddress());
+        Message msg = new TextMessage("Hi there!");
+//        assertTrue(server.send("sampleClient", msg));
     }
 }
