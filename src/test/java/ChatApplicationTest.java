@@ -14,11 +14,11 @@ public class ChatApplicationTest {
         return new InetSocketAddress("localhost", 50000);
     }
 
-    @Test
-    public void canClientSendAMessageToAnotherClient() {
-        Server server = new ChatServer(0);
-        server.register("sampleClient", getSampleSocketAddress());
-        Message msg = new TextMessage("Hi there!");
-//        assertTrue(server.send("sampleClient", msg));
-    }
+//    @Test
+//    public void canClientSendAMessageToAnotherClient() {
+//        Server server = new ChatServer(0);
+//        server.register("sampleClient", getSampleSocketAddress());
+//        Message msg = new TextMessage("Hi there!");
+////        assertTrue(server.send("sampleClient", msg));
+//    }
 }

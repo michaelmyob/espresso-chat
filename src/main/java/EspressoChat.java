@@ -1,14 +1,18 @@
 import java.io.IOException;
 import java.util.Properties;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class EspressoChat {
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
-
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
         if (args.length == 1) {
 
             Server server = new ChatServer(Integer.parseInt(args[0]));
-            server.run();
+            executorService.submit(server::run);
+
 
         } else if (args.length == 2){
 

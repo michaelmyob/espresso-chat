@@ -1,11 +1,9 @@
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
+import java.net.Socket;
 
 public interface Server {
 
     Message respond(Client client, Message message);
-    boolean register(String clientNickName, InetSocketAddress clientAddress);
+    boolean register(String clientNickName, Socket clientSocket);
     void run();
     String getIP();
     int getPort();

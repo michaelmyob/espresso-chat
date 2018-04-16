@@ -10,7 +10,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class ChatServerTest {
-
+//
 //    @Test
 //    public void canServerLookupAClient() {
 //        ConcurrentHashMap client = new ConcurrentHashMap();
@@ -21,24 +21,24 @@ public class ChatServerTest {
 //        assertTrue(server.send("testClient", message));
 //
 //    }
-
-    @Test
-    public void serverCanRegisterAClient() {
-
-        Server server = new ChatServer(0);
-        InetSocketAddress clientAddress = new InetSocketAddress("localhost",51748);
-        assertTrue(server.register("testNickName", clientAddress));
-    }
-
-    @Test
-    public void serverDeclinesDuplicateClientRegistration() {
-
-        Server server = new ChatServer(0);
-        InetSocketAddress clientAddress = new InetSocketAddress("localhost",51748);
-        server.register("testNickName", clientAddress);
-
-        assertFalse(server.register("testNickName", clientAddress));
-    }
+//
+//    @Test
+//    public void serverCanRegisterAClient() {
+//
+//        Server server = new ChatServer(0);
+//        InetSocketAddress clientAddress = new InetSocketAddress("localhost",51748);
+//        assertTrue(server.register("testNickName", clientAddress));
+//    }
+//
+//    @Test
+//    public void serverDeclinesDuplicateClientRegistration() {
+//
+//        Server server = new ChatServer(0);
+//        InetSocketAddress clientAddress = new InetSocketAddress("localhost",51748);
+//        server.register("testNickName", clientAddress);
+//
+//        assertFalse(server.register("testNickName", clientAddress));
+//    }
 //
 //    @Test
 //    public void serverCanLookupAClient() {

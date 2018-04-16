@@ -15,17 +15,9 @@ public class ChatServerWorker implements Runnable {
     }
 
     private boolean send(String clientName, Message message) {
-
-        try {
-            InetSocketAddress address = server.lookupClient(clientName);
-            Socket destinationSocket = new Socket(address.getHostName(), address.getPort());
-            ChatUtilities.sendAMessageThroughSocket(destinationSocket, message);
-            return true;
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return false;
+        Socket clientSocket = server.lookupClient(clientName);
+        ChatUtilities.sendAMessageThroughSocket(clientSocket, message);
+        return true;
     }
 
     public void run() {
@@ -66,7 +58,7 @@ public class ChatServerWorker implements Runnable {
         return stringBuilder.toString();
     }
 
-    private void processClientsSelection(Message messageReceivedFromClient) throws IOException{
+    private void processClientsSelection(Message messageReceivedFromClient) throws IOException {
 
         if (messageReceivedFromClient.toString().equals("1")) {
 
@@ -82,7 +74,6 @@ public class ChatServerWorker implements Runnable {
             msg = new TextMessage("Please write a message:");
             ChatUtilities.sendAMessageThroughSocket(connectionSocket, msg);
             Message message = new TextMessage(readFromClient.readLine());
-
             send(clientNickName.toString(), message);
         }
     }
