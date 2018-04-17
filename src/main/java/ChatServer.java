@@ -78,7 +78,7 @@ public class ChatServer implements Server, Runnable {
                 InputStream inputStream = clientSocket.getInputStream();
                 BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
 
-                String messageReceivedFromClient, messageSentToClient, clientNickName;
+                String clientNickName;
 
                 while (true) {
                     Message msg = new TextMessage("Please choose a nickname: ");
@@ -86,9 +86,6 @@ public class ChatServer implements Server, Runnable {
 
                     if ((clientNickName = readFromClient.readLine()) != null) {
 
-                        InetSocketAddress addressToStore =
-                                new InetSocketAddress(clientSocket.getInetAddress(), clientSocket.getPort());
-                        System.out.println("Address : " + clientSocket.getInetAddress() + ", Port : " +  clientSocket.getPort());
                         if (register(clientNickName, clientSocket)) {
                             break;
                         }

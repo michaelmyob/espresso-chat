@@ -6,32 +6,29 @@ public class ChatClient implements Client {
 //    Server destinationServer;
     String destinationIP;
     int destinationPort;
+    BufferedReader readFromServer;
+    BufferedReader readFromKeyboard;
 
     ChatClient(String ip, int port) {
         this.destinationIP = ip;
         this.destinationPort = port;
-//        new ChatServer(destinationPort);
     }
 
-    public void startClient() throws IOException, ClassNotFoundException {
+    public void startClient() throws IOException {
 
         Socket socket = new Socket(destinationIP, destinationPort);
 
-        BufferedReader readFromKeyboard = new BufferedReader(new InputStreamReader(System.in));
+        readFromKeyboard = new BufferedReader(new InputStreamReader(System.in));
 
         InputStream inputStream = socket.getInputStream();
-        BufferedReader readFromServer = new BufferedReader(new InputStreamReader(inputStream));
-
-//        InputStream readFromServer = new InputStream(inputStream);
+        readFromServer = new BufferedReader(new InputStreamReader(inputStream));
 
         System.out.println("Start the chat, type and press Enter key");
 
-        String messageReceivedFromServer;
+
+        checkForIncomingMessages();
 
         while (true) {
-            if ((messageReceivedFromServer = readFromServer.readLine()) != null) {
-                System.out.println("Server says: " + messageReceivedFromServer.toString());
-            }
 
             if (!readFromServer.ready()) {
                 Message messageSentToServer = new TextMessage(readFromKeyboard.readLine());
@@ -40,6 +37,26 @@ public class ChatClient implements Client {
             }
 
         }
+    }
+
+    private void checkForIncomingMessages() {
+        new Thread(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        String messageReceivedFromServer;
+
+                        while (true) {
+                            try {
+                                if ((messageReceivedFromServer = readFromServer.readLine()) != null) {
+                                    System.out.println("Incoming Message: " + messageReceivedFromServer.toString());
+                                }
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }).start();
     }
 
     public boolean connect(Server server) {
