@@ -17,7 +17,7 @@ public class EspressoChat {
         } else if (args.length == 2){
 
             Client client = new ChatClient(args[0], Integer.parseInt(args[1]));
-            client.startClient();
+            executorService.submit(client::startClient);
 
         } else {
             System.out.println("Incorrect startup arguments");

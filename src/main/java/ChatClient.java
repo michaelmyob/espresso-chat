@@ -3,7 +3,7 @@ import java.net.Socket;
 
 public class ChatClient implements Client {
 
-//    Server destinationServer;
+    //    Server destinationServer;
     String destinationIP;
     int destinationPort;
     BufferedReader readFromServer;
@@ -14,48 +14,50 @@ public class ChatClient implements Client {
         this.destinationPort = port;
     }
 
-    public void startClient() throws IOException {
+    public void startClient() {
 
-        Socket socket = new Socket(destinationIP, destinationPort);
+        try {
+            Socket socket = new Socket(destinationIP, destinationPort);
 
-        readFromKeyboard = new BufferedReader(new InputStreamReader(System.in));
+            readFromKeyboard = new BufferedReader(new InputStreamReader(System.in));
 
-        InputStream inputStream = socket.getInputStream();
-        readFromServer = new BufferedReader(new InputStreamReader(inputStream));
+            InputStream inputStream = socket.getInputStream();
+            readFromServer = new BufferedReader(new InputStreamReader(inputStream));
 
-        System.out.println("Start the chat, type and press Enter key");
+            System.out.println("Start the chat, type and press Enter key");
 
+            checkForIncomingMessages();
 
-        checkForIncomingMessages();
+            while (true) {
 
-        while (true) {
+                if (!readFromServer.ready()) {
+                    Message messageSentToServer = new TextMessage(readFromKeyboard.readLine());
 
-            if (!readFromServer.ready()) {
-                Message messageSentToServer = new TextMessage(readFromKeyboard.readLine());
+                    ChatUtilities.sendAMessageThroughSocket(socket, messageSentToServer);
+                }
 
-                ChatUtilities.sendAMessageThroughSocket(socket, messageSentToServer);
             }
-
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
     private void checkForIncomingMessages() {
         new Thread(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        String messageReceivedFromServer;
+                () -> {
+                    String messageReceivedFromServer;
 
+                    try {
                         while (true) {
-                            try {
-                                if ((messageReceivedFromServer = readFromServer.readLine()) != null) {
-                                    System.out.println("Incoming Message: " + messageReceivedFromServer.toString());
-                                }
-                            } catch (IOException e) {
-                                e.printStackTrace();
+                            if ((messageReceivedFromServer = readFromServer.readLine()) != null) {
+                                System.out.println("Incoming Message: " + messageReceivedFromServer.toString());
                             }
                         }
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
+
+
                 }).start();
     }
 

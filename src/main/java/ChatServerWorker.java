@@ -20,21 +20,45 @@ public class ChatServerWorker implements Runnable {
         return true;
     }
 
+    public synchronized boolean register(String clientNickName, Socket clientSocket) {
+        if (server.lookupClient(clientNickName) == null) {
+            server.addClientIntoMap(clientNickName, clientSocket);
+            return true;
+        }
+        return false;
+    }
+
     public void run() {
 
         try {
             InputStream inputStream = connectionSocket.getInputStream();
             BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
 
-            Message messageReceivedFromClient, messageSentToClient, clientNickName;
+            Message messageReceivedFromClient;
 
+            while (true) {
+                Message msg = new TextMessage("Please choose a nickname: ");
+                ChatUtilities.sendAMessageThroughSocket(connectionSocket, msg);
+                String clientNickName;
+
+                if ((clientNickName = readFromClient.readLine()) != null) {
+
+                    if (register(clientNickName, connectionSocket)) {
+                        break;
+                    }
+                    else {
+                        msg = new TextMessage("Nickname exists in the database, please choose another nickname");
+                        ChatUtilities.sendAMessageThroughSocket(connectionSocket, msg);
+                    }
+                }
+            }
+
+            Message msg = new TextMessage("Please choose from options below:");
+            ChatUtilities.sendAMessageThroughSocket(connectionSocket, msg);
+            ChatUtilities.sendAMessageThroughSocket(connectionSocket, new TextMessage(displayOptions()));
 
             while (true) {
                 if (!connectionSocket.isClosed() && connectionSocket != null) {
-
-                    Message msg = new TextMessage("Please choose from options below:");
-                    ChatUtilities.sendAMessageThroughSocket(connectionSocket, msg);
-                    ChatUtilities.sendAMessageThroughSocket(connectionSocket, new TextMessage(displayOptions()));
 
                     messageReceivedFromClient = new TextMessage(readFromClient.readLine());
 
