@@ -44,6 +44,9 @@ public class ChatClient implements Client {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        finally {
+            System.exit(0);
+        }
     }
 
     private void checkForIncomingMessages() {
@@ -54,6 +57,10 @@ public class ChatClient implements Client {
                     try {
                         while (true) {
                             if ((messageReceivedFromServer = readFromServer.readLine()) != null) {
+
+//                                if (messageReceivedFromServer.equals("STATUS_QUIT_NOW")) {
+//                                    System.exit(0);
+//                                }
                                 System.out.println(messageReceivedFromServer.toString());
                             }
                         }

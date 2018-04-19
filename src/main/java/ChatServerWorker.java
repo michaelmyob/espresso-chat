@@ -20,8 +20,16 @@ public class ChatServerWorker implements Runnable, ServerWorker {
     }
 
     private synchronized boolean register(String clientNickName, ClientSocket clientSocket) {
-        if (server.lookupClient(clientNickName) == null) {
+        if (server.lookupClient(clientNickName) == null && !clientNickName.isEmpty()) {
             server.addClientIntoMap(clientNickName, clientSocket);
+            return true;
+        }
+        return false;
+    }
+
+    private synchronized boolean remove(String clientNickName) {
+        if (server.lookupClient(clientNickName) != null) {
+            server.removeClientFromMap(clientNickName);
             return true;
         }
         return false;
@@ -33,25 +41,8 @@ public class ChatServerWorker implements Runnable, ServerWorker {
             InputStream inputStream = clientSocket.getInputStream();
             BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
 
+            signup(readFromClient);
             Message messageReceivedFromClient;
-
-            while (true) {
-                Message msg = new TextMessage("Please choose a nickname: ");
-                clientSocket.sendAMessageThroughSocket(msg);
-                String clientNickName;
-
-                if ((clientNickName = readFromClient.readLine()) != null) {
-
-                    if (register(clientNickName, clientSocket)) {
-                        connectedClientsNickname = clientNickName;
-                        break;
-                    }
-                    else {
-                        msg = new TextMessage("Nickname exists in the database, please choose another nickname");
-                        clientSocket.sendAMessageThroughSocket(msg);
-                    }
-                }
-            }
 
             Message msg = new TextMessage("Please choose from options below:");
             clientSocket.sendAMessageThroughSocket(msg);
@@ -63,14 +54,31 @@ public class ChatServerWorker implements Runnable, ServerWorker {
                     messageReceivedFromClient = new TextMessage(readFromClient.readLine());
 
                     processClientsSelection(messageReceivedFromClient);
-
-
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            //TODO - remove client from hashmap if the connection dies etc
+            remove(connectedClientsNickname);
+        }
+    }
+
+    private void signup(BufferedReader readFromClient) throws IOException {
+        boolean isSignedUp = false;
+        while (!isSignedUp) {
+            Message msg = new TextMessage("Please choose a nickname: ");
+            clientSocket.sendAMessageThroughSocket(msg);
+            String clientNickName = readFromClient.readLine();
+
+            isSignedUp = register(clientNickName, clientSocket);
+
+            if (isSignedUp) {
+                connectedClientsNickname = clientNickName;
+            }
+            else {
+                msg = new TextMessage("Nickname exists in the database, please choose another nickname");
+                clientSocket.sendAMessageThroughSocket(msg);
+            }
         }
     }
 
@@ -107,6 +115,13 @@ public class ChatServerWorker implements Runnable, ServerWorker {
 
             msg = new TextMessage("Message '" + messageToBeSent + "' was sent to " + clientNickName.toString() + ".");
             clientSocket.sendAMessageThroughSocket(msg);
+
+        } else if (messageReceivedFromClient.toString().equals("3")) {
+            Message msg = new TextMessage("Thank you for using Espresso Chat.\nQuitting now...");
+            clientSocket.sendAMessageThroughSocket(msg);
+
+            remove(connectedClientsNickname);
+            clientSocket.getSocket().close();
 
         }
     }

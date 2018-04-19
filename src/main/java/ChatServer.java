@@ -31,6 +31,10 @@ public class ChatServer implements Server, Runnable {
         clientsMap.put(clientNickName, clientSocket);
     }
 
+    public void removeClientFromMap(String clientNickName) {
+        clientsMap.remove(clientNickName);
+    }
+
 
     public String listAllClientsRegistered() {
         StringBuilder listofEntries = new StringBuilder();
