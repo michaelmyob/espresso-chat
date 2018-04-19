@@ -3,7 +3,6 @@ import java.net.Socket;
 
 public class ChatClient implements Client {
 
-    //    Server destinationServer;
     String destinationIP;
     int destinationPort;
     BufferedReader readFromServer;
@@ -18,8 +17,7 @@ public class ChatClient implements Client {
 
     public void startClient() {
 
-        try {
-            Socket socket = new Socket(destinationIP, destinationPort);
+        try (Socket socket = new Socket(destinationIP, destinationPort)) {
 
             readFromKeyboard = new BufferedReader(new InputStreamReader(System.in));
 

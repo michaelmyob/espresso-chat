@@ -1,6 +1,4 @@
-
 import java.io.*;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Map;
@@ -10,12 +8,11 @@ import java.util.concurrent.Executors;
 
 public class ChatServer implements Server, Runnable {
 
-    private final String DEFAULT_IP_ADDRESS = "localhost";
     private final int DEFAULT_PORT = 30000;
-    private ExecutorService executorService = Executors.newFixedThreadPool(12);
-    private String IPaddress;
     private int port;
     private static Map clientsMap;
+    private final int MAX_NUM_OF_THREADS = 20;
+    ExecutorService executorService;
 
     public void addClientIntoMap(String clientNickName, ClientSocket clientSocket) {
         if (clientsMap.containsKey(clientNickName)) {
@@ -30,8 +27,8 @@ public class ChatServer implements Server, Runnable {
         } else {
             this.port = port;
         }
-        this.IPaddress = DEFAULT_IP_ADDRESS;
         clientsMap = new ConcurrentHashMap<String, ClientSocket>();
+        executorService = Executors.newFixedThreadPool(MAX_NUM_OF_THREADS);
     }
 
     public ClientSocket lookupClient(String clientName) {
@@ -53,8 +50,7 @@ public class ChatServer implements Server, Runnable {
             while (true) {
 
                 Socket incomingConnection = socket.accept();
-                new Thread(new ChatServerWorker(new ClientSocket(incomingConnection), this)).start();
-
+                executorService.submit(new ChatServerWorker(new ClientSocket(incomingConnection), this));
             }
 
         } catch (IOException e) {

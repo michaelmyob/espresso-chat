@@ -97,6 +97,10 @@ public class ChatServerWorker implements Runnable, ServerWorker {
 
             Message message = new TextMessage(readFromClient.readLine());
             send(clientNickName.toString(), message);
+
+            msg = new TextMessage("Message sent to " + clientNickName.toString());
+            clientSocket.sendAMessageThroughSocket(msg);
+
         }
     }
 }
