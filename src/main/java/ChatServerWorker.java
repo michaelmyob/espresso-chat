@@ -4,6 +4,7 @@ import java.net.ServerSocket;
 public class ChatServerWorker implements Runnable, ServerWorker {
 
     ClientSocket clientSocket;
+    String connectedClientsNickname;
     ChatServer server;
 
     public ChatServerWorker(ClientSocket clientSocket, ChatServer server) {
@@ -41,6 +42,7 @@ public class ChatServerWorker implements Runnable, ServerWorker {
                 if ((clientNickName = readFromClient.readLine()) != null) {
 
                     if (register(clientNickName, clientSocket)) {
+                        connectedClientsNickname = clientNickName;
                         break;
                     }
                     else {
@@ -95,7 +97,7 @@ public class ChatServerWorker implements Runnable, ServerWorker {
             msg = new TextMessage("Please write a message:");
             clientSocket.sendAMessageThroughSocket(msg);
 
-            Message message = new TextMessage(readFromClient.readLine());
+            Message message = new TextMessage(connectedClientsNickname + " says: " + readFromClient.readLine());
             send(clientNickName.toString(), message);
 
             msg = new TextMessage("Message sent to " + clientNickName.toString());

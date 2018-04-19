@@ -54,7 +54,7 @@ public class ChatClient implements Client {
                     try {
                         while (true) {
                             if ((messageReceivedFromServer = readFromServer.readLine()) != null) {
-                                System.out.println("Incoming Message: " + messageReceivedFromServer.toString());
+                                System.out.println(messageReceivedFromServer.toString());
                             }
                         }
                     } catch (IOException e) {
