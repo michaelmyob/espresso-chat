@@ -1,26 +1,23 @@
 import java.io.*;
-import java.net.InetSocketAddress;
-import java.net.Socket;
+import java.net.ServerSocket;
 
-public class ChatServerWorker implements Runnable {
+public class ChatServerWorker implements Runnable, ServerWorker {
 
-    //        ServerSocket socket = new ServerSocket(this.getPort());
-//        Socket connectionSocket = socket.accept();
-    Socket connectionSocket;
+    ClientSocket clientSocket;
     ChatServer server;
 
-    public ChatServerWorker(Socket connectionSocket, ChatServer server) throws IOException {
-        this.connectionSocket = connectionSocket;
+    public ChatServerWorker(ClientSocket clientSocket, ChatServer server) {
+        this.clientSocket = clientSocket;
         this.server = server;
     }
 
     private boolean send(String clientName, Message message) {
-        Socket clientSocket = server.lookupClient(clientName);
-        ChatUtilities.sendAMessageThroughSocket(clientSocket, message);
+        ClientSocket clientSocket = server.lookupClient(clientName);
+        clientSocket.sendAMessageThroughSocket(message);
         return true;
     }
 
-    public synchronized boolean register(String clientNickName, Socket clientSocket) {
+    private synchronized boolean register(String clientNickName, ClientSocket clientSocket) {
         if (server.lookupClient(clientNickName) == null) {
             server.addClientIntoMap(clientNickName, clientSocket);
             return true;
@@ -31,34 +28,34 @@ public class ChatServerWorker implements Runnable {
     public void run() {
 
         try {
-            InputStream inputStream = connectionSocket.getInputStream();
+            InputStream inputStream = clientSocket.getInputStream();
             BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
 
             Message messageReceivedFromClient;
 
             while (true) {
                 Message msg = new TextMessage("Please choose a nickname: ");
-                ChatUtilities.sendAMessageThroughSocket(connectionSocket, msg);
+                clientSocket.sendAMessageThroughSocket(msg);
                 String clientNickName;
 
                 if ((clientNickName = readFromClient.readLine()) != null) {
 
-                    if (register(clientNickName, connectionSocket)) {
+                    if (register(clientNickName, clientSocket)) {
                         break;
                     }
                     else {
                         msg = new TextMessage("Nickname exists in the database, please choose another nickname");
-                        ChatUtilities.sendAMessageThroughSocket(connectionSocket, msg);
+                        clientSocket.sendAMessageThroughSocket(msg);
                     }
                 }
             }
 
             Message msg = new TextMessage("Please choose from options below:");
-            ChatUtilities.sendAMessageThroughSocket(connectionSocket, msg);
-            ChatUtilities.sendAMessageThroughSocket(connectionSocket, new TextMessage(displayOptions()));
+            clientSocket.sendAMessageThroughSocket(msg);
+            clientSocket.sendAMessageThroughSocket(new TextMessage(displayOptions()));
 
             while (true) {
-                if (!connectionSocket.isClosed() && connectionSocket != null) {
+                if (!clientSocket.getSocket().isClosed() && clientSocket.getSocket() != null) {
 
                     messageReceivedFromClient = new TextMessage(readFromClient.readLine());
 
@@ -88,15 +85,16 @@ public class ChatServerWorker implements Runnable {
 
         } else if (messageReceivedFromClient.toString().equals("2")) {
             Message msg = new TextMessage("Please enter a client name:");
-            ChatUtilities.sendAMessageThroughSocket(connectionSocket, msg);
+            clientSocket.sendAMessageThroughSocket(msg);
 
-            InputStream inputStream = connectionSocket.getInputStream();
+            InputStream inputStream = clientSocket.getInputStream();
             BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
 
             Message clientNickName = new TextMessage(readFromClient.readLine());
 
             msg = new TextMessage("Please write a message:");
-            ChatUtilities.sendAMessageThroughSocket(connectionSocket, msg);
+            clientSocket.sendAMessageThroughSocket(msg);
+
             Message message = new TextMessage(readFromClient.readLine());
             send(clientNickName.toString(), message);
         }

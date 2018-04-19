@@ -8,6 +8,8 @@ public class ChatClient implements Client {
     int destinationPort;
     BufferedReader readFromServer;
     BufferedReader readFromKeyboard;
+    OutputStream outputStream;
+    PrintWriter writer;
 
     ChatClient(String ip, int port) {
         this.destinationIP = ip;
@@ -24,6 +26,10 @@ public class ChatClient implements Client {
             InputStream inputStream = socket.getInputStream();
             readFromServer = new BufferedReader(new InputStreamReader(inputStream));
 
+            outputStream = socket.getOutputStream();
+            writer = new PrintWriter(outputStream, true);
+
+
             System.out.println("Start the chat, type and press Enter key");
 
             checkForIncomingMessages();
@@ -32,8 +38,8 @@ public class ChatClient implements Client {
 
                 if (!readFromServer.ready()) {
                     Message messageSentToServer = new TextMessage(readFromKeyboard.readLine());
-
-                    ChatUtilities.sendAMessageThroughSocket(socket, messageSentToServer);
+                    writer.println(messageSentToServer);
+                    writer.flush();
                 }
 
             }
@@ -60,20 +66,4 @@ public class ChatClient implements Client {
 
                 }).start();
     }
-
-    public boolean connect(Server server) {
-        return true;
-    }
-
-
-    public void sendMessage(Server server, Message message) {
-
-    }
-
-
-    public boolean receive(Message message) {
-        return true;
-    }
-
-
 }

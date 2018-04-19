@@ -17,7 +17,7 @@ public class ChatServer implements Server, Runnable {
     private int port;
     private static Map clientsMap;
 
-    public void addClientIntoMap(String clientNickName, Socket clientSocket) {
+    public void addClientIntoMap(String clientNickName, ClientSocket clientSocket) {
         if (clientsMap.containsKey(clientNickName)) {
             System.out.println("Client exists, please choose another nick name");
         }
@@ -31,25 +31,12 @@ public class ChatServer implements Server, Runnable {
             this.port = port;
         }
         this.IPaddress = DEFAULT_IP_ADDRESS;
-        clientsMap = new ConcurrentHashMap<String, Socket>();
+        clientsMap = new ConcurrentHashMap<String, ClientSocket>();
     }
 
-    public String getIP() {
-        return IPaddress;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public Message respond(Client client, Message message) {
-        return message;
-    }
-
-
-    public Socket lookupClient(String clientName) {
+    public ClientSocket lookupClient(String clientName) {
         if (clientsMap.containsKey(clientName)) {
-            return (Socket) clientsMap.get(clientName);
+            return (ClientSocket) clientsMap.get(clientName);
 
         } else {
             return null;
@@ -61,12 +48,12 @@ public class ChatServer implements Server, Runnable {
 
         System.out.println("Server is running and ready for chatting...");
 
-        try (ServerSocket socket = new ServerSocket(this.getPort())) {
+        try (ServerSocket socket = new ServerSocket(port)) {
 
             while (true) {
 
-                Socket clientSocket = socket.accept();
-                new Thread(new ChatServerWorker(clientSocket, this)).start();
+                Socket incomingConnection = socket.accept();
+                new Thread(new ChatServerWorker(new ClientSocket(incomingConnection), this)).start();
 
             }
 
