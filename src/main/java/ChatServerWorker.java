@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.ServerSocket;
+import java.util.Map;
 
 public class ChatServerWorker implements Runnable, ServerWorker {
 
@@ -84,6 +85,9 @@ public class ChatServerWorker implements Runnable, ServerWorker {
     private void processClientsSelection(Message messageReceivedFromClient) throws IOException {
 
         if (messageReceivedFromClient.toString().equals("1")) {
+            Message list = new TextMessage(server.listAllClientsRegistered());
+            clientSocket.sendAMessageThroughSocket(list);
+
 
         } else if (messageReceivedFromClient.toString().equals("2")) {
             Message msg = new TextMessage("Please enter a client name:");

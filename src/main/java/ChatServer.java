@@ -10,16 +10,9 @@ public class ChatServer implements Server, Runnable {
 
     private final int DEFAULT_PORT = 30000;
     private int port;
-    private static Map clientsMap;
+    private static Map<String, ClientSocket> clientsMap;
     private final int MAX_NUM_OF_THREADS = 20;
     ExecutorService executorService;
-
-    public void addClientIntoMap(String clientNickName, ClientSocket clientSocket) {
-        if (clientsMap.containsKey(clientNickName)) {
-            System.out.println("Client exists, please choose another nick name");
-        }
-        clientsMap.put(clientNickName, clientSocket);
-    }
 
     public ChatServer(int port) {
         if (port == 0) {
@@ -29,6 +22,24 @@ public class ChatServer implements Server, Runnable {
         }
         clientsMap = new ConcurrentHashMap<String, ClientSocket>();
         executorService = Executors.newFixedThreadPool(MAX_NUM_OF_THREADS);
+    }
+
+    public void addClientIntoMap(String clientNickName, ClientSocket clientSocket) {
+        if (clientsMap.containsKey(clientNickName)) {
+            System.out.println("Client exists, please choose another nick name");
+        }
+        clientsMap.put(clientNickName, clientSocket);
+    }
+
+
+    public String listAllClientsRegistered() {
+        StringBuilder listofEntries = new StringBuilder();
+        listofEntries.append("List of clients currently online:");
+
+        for (Map.Entry<String, ClientSocket> e: clientsMap.entrySet()) {
+            listofEntries.append("\n" + e.getKey());
+        }
+        return listofEntries.toString();
     }
 
     public ClientSocket lookupClient(String clientName) {
