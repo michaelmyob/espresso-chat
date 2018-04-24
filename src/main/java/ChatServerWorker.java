@@ -7,7 +7,6 @@ public class ChatServerWorker implements Runnable, ServerWorker {
     private final String SERVER_MENU_OPTION_2 = "SEND";
     private final String SERVER_MENU_OPTION_3 = "QUIT";
 
-
     ClientSocket clientSocket;
     String connectedClientsNickname;
     MapDataStorage mapDataStorage;
@@ -28,14 +27,11 @@ public class ChatServerWorker implements Runnable, ServerWorker {
             InputStream inputStream = clientSocket.getInputStream();
             BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
 
-            signup(readFromClient);
+//            signup(readFromClient);
             String messageReceivedFromClient;
 
-//            Message msg = new TextMessage("Please choose from options below:");
             clientSocket.sendATextMessage("Please choose from options below:");
             clientSocket.sendATextMessage(displayOptions());
-//            clientSocket.sendAMessageThroughSocket(msg);
-//            clientSocket.sendAMessageThroughSocket(new TextMessage(displayOptions()));
 
             while (true) {
                 if (!clientSocket.getSocket().isClosed() && clientSocket.getSocket() != null) {
@@ -49,6 +45,10 @@ public class ChatServerWorker implements Runnable, ServerWorker {
             e.printStackTrace();
         } finally {
             mapDataStorage.removeClient(connectedClientsNickname);
+            Thread.currentThread().interrupt();
+            clientSocket.sendATextMessage("shutting down now...");
+            System.exit(0);
+            // TODO - Fix this quitting the thread @ the server level
         }
     }
 

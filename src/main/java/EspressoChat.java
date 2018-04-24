@@ -6,9 +6,9 @@ public class EspressoChat {
             Server server = new ChatServer(Integer.parseInt(args[0]));
             server.run();
 
-        } else if (args.length == 2) {
+        } else if (args.length == 3) {
 
-            Client client = new ChatClient(args[0], Integer.parseInt(args[1]));
+            Client client = new ChatClient(args[0], Integer.parseInt(args[1]), args[2]);
             client.startClient();
         } else {
             System.out.println("Incorrect startup arguments");

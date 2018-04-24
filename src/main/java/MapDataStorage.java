@@ -25,14 +25,15 @@ public class MapDataStorage implements DataService {
 
     public boolean addClient(String clientNickName, ClientSocket clientSocket) {
         if (clientNickName.isEmpty()) {
-            System.out.println("You've not entered any text, please choose a valid nickname");
+            clientSocket.sendATextMessage("You've not entered any text, please choose a valid nickname");
             return false;
         }
         else if (clientsMap.containsKey(clientNickName)) {
-            System.out.println("Oops, that nickname already exists, please choose another nickname");
+            clientSocket.sendATextMessage("Oops, that nickname already exists, please choose another nickname");
             return false;
         }
         clientsMap.put(clientNickName, clientSocket);
+        clientSocket.sendATextMessage("Nickname '" + clientNickName + "' is now registered\n");
         return true;
     }
 

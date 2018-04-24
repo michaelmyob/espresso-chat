@@ -3,21 +3,25 @@ import java.net.Socket;
 
 public class ChatClient implements Client {
 
+    String nickname;
     String destinationIP;
     int destinationPort;
     BufferedReader readFromServer;
     BufferedReader readFromKeyboard;
     OutputStream outputStream;
     PrintWriter writer;
+    private final String SERVER_QUIT_RESPONSE = "QUIT";
 
-    ChatClient(String ip, int port) {
+    ChatClient(String ip, int port, String nickname) {
         this.destinationIP = ip;
         this.destinationPort = port;
+        this.nickname = nickname;
     }
 
     public void startClient() {
 
         try (Socket socket = new Socket(destinationIP, destinationPort)) {
+
 
             readFromKeyboard = new BufferedReader(new InputStreamReader(System.in));
 
@@ -27,19 +31,35 @@ public class ChatClient implements Client {
             outputStream = socket.getOutputStream();
             writer = new PrintWriter(outputStream, true);
 
-
-            System.out.println("Start the chat, type and press Enter key");
-
             checkForIncomingMessages();
 
-            while (true) {
+            boolean isRunning = true;
 
-                if (!readFromServer.ready()) {
-                    Message messageSentToServer = new TextMessage(readFromKeyboard.readLine());
+            writer.println(nickname);
+            writer.flush();
+
+            String response = readFromServer.readLine();
+            if (response.equals(SERVER_QUIT_RESPONSE)) {
+                isRunning = false;
+            }
+
+
+
+            while (isRunning) {
+
+                if (!readFromServer.ready() ) {
+
+                    String input = readFromKeyboard.readLine();
+
+                    Message messageSentToServer = new TextMessage(input);
+
+                    if (input.toUpperCase().equals(SERVER_QUIT_RESPONSE)) {
+                        isRunning = false;
+                    }
+
                     writer.println(messageSentToServer);
                     writer.flush();
                 }
-
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -57,8 +77,7 @@ public class ChatClient implements Client {
                     try {
                         while (true) {
                             if ((messageReceivedFromServer = readFromServer.readLine()) != null) {
-
-                                System.out.println(messageReceivedFromServer.toString());
+                                System.out.println(messageReceivedFromServer);
                             }
                         }
                     } catch (IOException e) {
