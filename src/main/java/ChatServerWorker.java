@@ -1,38 +1,25 @@
 import java.io.*;
-import java.net.ServerSocket;
-import java.util.Map;
+import java.util.List;
 
 public class ChatServerWorker implements Runnable, ServerWorker {
 
+    private final String SERVER_MENU_OPTION_1 = "LIST";
+    private final String SERVER_MENU_OPTION_2 = "SEND";
+    private final String SERVER_MENU_OPTION_3 = "QUIT";
+
+
     ClientSocket clientSocket;
     String connectedClientsNickname;
-    ChatServer server;
+    MapDataStorage mapDataStorage;
 
-    public ChatServerWorker(ClientSocket clientSocket, ChatServer server) {
+    public ChatServerWorker(ClientSocket clientSocket, MapDataStorage mapDataStorage) {
         this.clientSocket = clientSocket;
-        this.server = server;
+        this.mapDataStorage = mapDataStorage;
     }
 
-    private boolean send(String clientName, Message message) {
-        ClientSocket clientSocket = server.lookupClient(clientName);
-        clientSocket.sendAMessageThroughSocket(message);
-        return true;
-    }
-
-    private synchronized boolean register(String clientNickName, ClientSocket clientSocket) {
-        if (server.lookupClient(clientNickName) == null && !clientNickName.isEmpty()) {
-            server.addClientIntoMap(clientNickName, clientSocket);
-            return true;
-        }
-        return false;
-    }
-
-    private synchronized boolean remove(String clientNickName) {
-        if (server.lookupClient(clientNickName) != null) {
-            server.removeClientFromMap(clientNickName);
-            return true;
-        }
-        return false;
+    private void send(String clientName, String message) {
+        ClientSocket clientSocket = mapDataStorage.getClient(clientName);
+        clientSocket.sendATextMessage(message);
     }
 
     public void run() {
@@ -42,16 +29,18 @@ public class ChatServerWorker implements Runnable, ServerWorker {
             BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
 
             signup(readFromClient);
-            Message messageReceivedFromClient;
+            String messageReceivedFromClient;
 
-            Message msg = new TextMessage("Please choose from options below:");
-            clientSocket.sendAMessageThroughSocket(msg);
-            clientSocket.sendAMessageThroughSocket(new TextMessage(displayOptions()));
+//            Message msg = new TextMessage("Please choose from options below:");
+            clientSocket.sendATextMessage("Please choose from options below:");
+            clientSocket.sendATextMessage(displayOptions());
+//            clientSocket.sendAMessageThroughSocket(msg);
+//            clientSocket.sendAMessageThroughSocket(new TextMessage(displayOptions()));
 
             while (true) {
                 if (!clientSocket.getSocket().isClosed() && clientSocket.getSocket() != null) {
 
-                    messageReceivedFromClient = new TextMessage(readFromClient.readLine());
+                    messageReceivedFromClient = readFromClient.readLine();
 
                     processClientsSelection(messageReceivedFromClient);
                 }
@@ -59,70 +48,83 @@ public class ChatServerWorker implements Runnable, ServerWorker {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            remove(connectedClientsNickname);
+            mapDataStorage.removeClient(connectedClientsNickname);
         }
     }
 
     private void signup(BufferedReader readFromClient) throws IOException {
         boolean isSignedUp = false;
         while (!isSignedUp) {
-            Message msg = new TextMessage("Please choose a nickname: ");
-            clientSocket.sendAMessageThroughSocket(msg);
+            clientSocket.sendATextMessage("Please choose a nickname: ");
             String clientNickName = readFromClient.readLine();
 
-            isSignedUp = register(clientNickName, clientSocket);
+            isSignedUp = mapDataStorage.addClient(clientNickName, clientSocket);
 
             if (isSignedUp) {
                 connectedClientsNickname = clientNickName;
-            }
-            else {
-                msg = new TextMessage("Nickname exists in the database, please choose another nickname");
-                clientSocket.sendAMessageThroughSocket(msg);
+            } else {
+                clientSocket.sendATextMessage("Nickname exists in the database, please choose another nickname");
             }
         }
     }
 
     private String displayOptions() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("[1] List all clients online\n");
-        stringBuilder.append("[2] Send a message\n");
-        stringBuilder.append("[3] Quit");
+        stringBuilder.append(SERVER_MENU_OPTION_1 + ": List all clients online\n");
+        stringBuilder.append(SERVER_MENU_OPTION_2 + ": Send a message\n");
+        stringBuilder.append(SERVER_MENU_OPTION_3 + ": Quit");
         return stringBuilder.toString();
     }
 
-    private void processClientsSelection(Message messageReceivedFromClient) throws IOException {
 
-        if (messageReceivedFromClient.toString().equals("1")) {
-            Message list = new TextMessage(server.listAllClientsRegistered());
-            clientSocket.sendAMessageThroughSocket(list);
+    private String listAllClientsOnline() {
+        List<String> clientsList = mapDataStorage.getAllClients();
+        clientsList.remove(connectedClientsNickname);
+        StringBuilder result = new StringBuilder();
 
+        if (clientsList.size() == 0) {
+            result.append("There are no other clients online at the moment!" + "\n");
+        }
+        else {
+            result.append("List of online clients: \n");
+            for (String client : clientsList) {
+                result.append(client + "\n");
+            }
+        }
+        return result.toString();
+    }
 
-        } else if (messageReceivedFromClient.toString().equals("2")) {
-            Message msg = new TextMessage("Please enter a client name:");
-            clientSocket.sendAMessageThroughSocket(msg);
+    private void processClientsSelection(String messageReceivedFromClient) throws IOException {
+
+        String clientResponse = messageReceivedFromClient.toUpperCase();
+
+        if (clientResponse.equals(SERVER_MENU_OPTION_1)) {
+            clientSocket.sendATextMessage(listAllClientsOnline());
+
+        } else if (clientResponse.equals(SERVER_MENU_OPTION_2)) {
+            clientSocket.sendATextMessage("Please enter a client name:");
 
             InputStream inputStream = clientSocket.getInputStream();
             BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
 
-            Message clientNickName = new TextMessage(readFromClient.readLine());
-
-            msg = new TextMessage("Please write a message:");
-            clientSocket.sendAMessageThroughSocket(msg);
+            String clientNickName = readFromClient.readLine();
+            clientSocket.sendATextMessage("Please write a message:");
 
             String messageToBeSent = readFromClient.readLine();
-            Message message = new TextMessage(connectedClientsNickname + " says: " + messageToBeSent);
-            send(clientNickName.toString(), message);
+            String destinationMessage = connectedClientsNickname + " says: " + messageToBeSent;
+            send(clientNickName, destinationMessage);
 
-            msg = new TextMessage("Message '" + messageToBeSent + "' was sent to " + clientNickName.toString() + ".");
-            clientSocket.sendAMessageThroughSocket(msg);
+            String confirmationMessage =  "Message '" + messageToBeSent + "' was sent to " + clientNickName + ".";
+            clientSocket.sendATextMessage(confirmationMessage);
 
-        } else if (messageReceivedFromClient.toString().equals("3")) {
-            Message msg = new TextMessage("Thank you for using Espresso Chat.\nQuitting now...");
-            clientSocket.sendAMessageThroughSocket(msg);
-
-            remove(connectedClientsNickname);
+        } else if (clientResponse.equals(SERVER_MENU_OPTION_3)) {
+            clientSocket.sendATextMessage("Thank you for using Espresso Chat.\nQuitting now...");
+            mapDataStorage.removeClient(connectedClientsNickname);
             clientSocket.getSocket().close();
 
+        }
+        else {
+            clientSocket.sendATextMessage("Invalid option selected, please try again!\n");
         }
     }
 }

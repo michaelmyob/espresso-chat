@@ -58,9 +58,6 @@ public class ChatClient implements Client {
                         while (true) {
                             if ((messageReceivedFromServer = readFromServer.readLine()) != null) {
 
-//                                if (messageReceivedFromServer.equals("STATUS_QUIT_NOW")) {
-//                                    System.exit(0);
-//                                }
                                 System.out.println(messageReceivedFromServer.toString());
                             }
                         }

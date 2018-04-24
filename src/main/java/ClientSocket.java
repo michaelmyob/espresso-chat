@@ -26,7 +26,7 @@ public class ClientSocket {
         return null;
     }
 
-    public void sendAMessageThroughSocket(Message message) {
+    private void sendAMessageThroughSocket(Message message) {
         try {
             OutputStream outputStream = socket.getOutputStream();
             PrintWriter writer = new PrintWriter(outputStream, true);
@@ -34,8 +34,14 @@ public class ClientSocket {
             writer.println(message);
             writer.flush();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Error sending message!!!!!!!! Please try again");
         }
+    }
+
+
+    public void sendATextMessage(String message) {
+        Message msg = new TextMessage(message);
+        sendAMessageThroughSocket(msg);
     }
 
 

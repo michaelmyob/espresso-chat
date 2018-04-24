@@ -9,13 +9,12 @@ public class TextMessage implements Message, Serializable {
 
     }
 
-    @Override
     public String toString() {
         return messageContents;
     }
 
-//    @Override
-//    public boolean equals(Object obj) {
-//        return this.equals(obj.toString());
-//    }
+    public boolean equals(Object obj) {
+        return (obj instanceof String) &&
+                this.messageContents.equals(obj.toString());
+    }
 }
