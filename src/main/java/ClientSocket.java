@@ -7,12 +7,15 @@ import java.net.Socket;
 public class ClientSocket {
 
     private Socket socket;
+    public String clientNickName;
+
 
     public Socket getSocket() {
         return socket;
     }
 
-    public ClientSocket(Socket socket) {
+    public ClientSocket(String nickName, Socket socket) {
+        this.clientNickName = nickName;
         this.socket = socket;
     }
 

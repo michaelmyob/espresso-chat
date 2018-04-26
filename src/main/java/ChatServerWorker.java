@@ -14,6 +14,7 @@ public class ChatServerWorker implements Runnable, ServerWorker {
     public ChatServerWorker(ClientSocket clientSocket, MapDataStorage mapDataStorage) {
         this.clientSocket = clientSocket;
         this.mapDataStorage = mapDataStorage;
+        this.connectedClientsNickname = clientSocket.clientNickName;
     }
 
     private void send(String clientName, String message) {
@@ -52,21 +53,21 @@ public class ChatServerWorker implements Runnable, ServerWorker {
         }
     }
 
-    private void signup(BufferedReader readFromClient) throws IOException {
-        boolean isSignedUp = false;
-        while (!isSignedUp) {
-            clientSocket.sendATextMessage("Please choose a nickname: ");
-            String clientNickName = readFromClient.readLine();
-
-            isSignedUp = mapDataStorage.addClient(clientNickName, clientSocket);
-
-            if (isSignedUp) {
-                connectedClientsNickname = clientNickName;
-            } else {
-                clientSocket.sendATextMessage("Nickname exists in the database, please choose another nickname");
-            }
-        }
-    }
+//    private void signup(BufferedReader readFromClient) throws IOException {
+//        boolean isSignedUp = false;
+//        while (!isSignedUp) {
+//            clientSocket.sendATextMessage("Please choose a nickname: ");
+//            String clientNickName = readFromClient.readLine();
+//
+//            isSignedUp = mapDataStorage.addClient(clientNickName, clientSocket);
+//
+//            if (isSignedUp) {
+//                connectedClientsNickname = clientNickName;
+//            } else {
+//                clientSocket.sendATextMessage("Nickname exists in the database, please choose another nickname");
+//            }
+//        }
+//    }
 
     private String displayOptions() {
         StringBuilder stringBuilder = new StringBuilder();

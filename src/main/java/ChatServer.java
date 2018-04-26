@@ -15,6 +15,8 @@ public class ChatServer implements Server, Runnable {
     private final int MAX_NUM_OF_THREADS = 20;
     ExecutorService executorService;
     private final String SERVER_QUIT_RESPONSE = "QUIT";
+    String connectedClientsNickname;
+
 
     public ChatServer(int port) {
         if (port == 0) {
@@ -39,7 +41,7 @@ public class ChatServer implements Server, Runnable {
                 InputStream inputStream = incomingConnection.getInputStream();
                 BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
                 String nickName = readFromClient.readLine();
-                ClientSocket client = new ClientSocket(incomingConnection);
+                ClientSocket client = new ClientSocket(nickName, incomingConnection);
                 if (listOfClients.addClient(nickName, client)) {
                     ChatServerWorker worker = new ChatServerWorker(client, listOfClients);
                     executorService.submit(worker);
