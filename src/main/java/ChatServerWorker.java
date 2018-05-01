@@ -18,8 +18,15 @@ public class ChatServerWorker implements Runnable, ServerWorker {
     }
 
     private void send(String clientName, String message) {
-        ClientSocket clientSocket = mapDataStorage.getClient(clientName);
-        clientSocket.sendATextMessage(message);
+        ClientSocket destinationClientSocket = mapDataStorage.getClient(clientName);
+        if (destinationClientSocket!= null) {
+            String destinationMessage = connectedClientsNickname + " says: " + message;
+            destinationClientSocket.sendATextMessage(destinationMessage);
+            clientSocket.sendATextMessage("Message '" + message + "' was sent to " + clientName + ".");
+        }
+        else {
+            clientSocket.sendATextMessage(clientName + " was not found, please choose an online client. Use command LIST to see all clients online");
+        }
     }
 
     public void run() {
@@ -28,7 +35,6 @@ public class ChatServerWorker implements Runnable, ServerWorker {
             InputStream inputStream = clientSocket.getInputStream();
             BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
 
-//            signup(readFromClient);
             String messageReceivedFromClient;
 
             clientSocket.sendATextMessage("Please choose from options below:");
@@ -52,22 +58,6 @@ public class ChatServerWorker implements Runnable, ServerWorker {
             // TODO - Fix this quitting the thread @ the server level
         }
     }
-
-//    private void signup(BufferedReader readFromClient) throws IOException {
-//        boolean isSignedUp = false;
-//        while (!isSignedUp) {
-//            clientSocket.sendATextMessage("Please choose a nickname: ");
-//            String clientNickName = readFromClient.readLine();
-//
-//            isSignedUp = mapDataStorage.addClient(clientNickName, clientSocket);
-//
-//            if (isSignedUp) {
-//                connectedClientsNickname = clientNickName;
-//            } else {
-//                clientSocket.sendATextMessage("Nickname exists in the database, please choose another nickname");
-//            }
-//        }
-//    }
 
     private String displayOptions() {
         StringBuilder stringBuilder = new StringBuilder();
@@ -112,11 +102,7 @@ public class ChatServerWorker implements Runnable, ServerWorker {
             clientSocket.sendATextMessage("Please write a message:");
 
             String messageToBeSent = readFromClient.readLine();
-            String destinationMessage = connectedClientsNickname + " says: " + messageToBeSent;
-            send(clientNickName, destinationMessage);
-
-            String confirmationMessage =  "Message '" + messageToBeSent + "' was sent to " + clientNickName + ".";
-            clientSocket.sendATextMessage(confirmationMessage);
+            send(clientNickName, messageToBeSent);
 
         } else if (clientResponse.equals(SERVER_MENU_OPTION_3)) {
             clientSocket.sendATextMessage("Thank you for using Espresso Chat.\nQuitting now...");
