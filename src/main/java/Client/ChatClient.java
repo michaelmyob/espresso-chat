@@ -1,3 +1,9 @@
+package Client;
+
+import Interfaces.Client;
+import Interfaces.Message;
+import Message.TextMessage;
+
 import java.io.*;
 import java.net.Socket;
 

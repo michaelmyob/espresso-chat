@@ -1,3 +1,7 @@
+package Server;
+
+import Interfaces.ServerWorker;
+
 import java.io.*;
 import java.util.List;
 
@@ -9,20 +13,20 @@ public class ChatServerWorker implements Runnable, ServerWorker {
 
     ClientSocket clientSocket;
     String connectedClientsNickname;
-    MapDataStorage mapDataStorage;
+    HashmapDatastoreHandler hashmapDatastoreHandler;
 
-    public ChatServerWorker(ClientSocket clientSocket, MapDataStorage mapDataStorage) {
+    public ChatServerWorker(ClientSocket clientSocket, HashmapDatastoreHandler hashmapDatastoreHandler) {
         this.clientSocket = clientSocket;
-        this.mapDataStorage = mapDataStorage;
+        this.hashmapDatastoreHandler = hashmapDatastoreHandler;
         this.connectedClientsNickname = clientSocket.clientNickName;
     }
 
     private void send(String clientName, String message) {
-        ClientSocket destinationClientSocket = mapDataStorage.getClient(clientName);
+        ClientSocket destinationClientSocket = hashmapDatastoreHandler.getClient(clientName);
         if (destinationClientSocket!= null) {
             String destinationMessage = connectedClientsNickname + " says: " + message;
             destinationClientSocket.sendATextMessage(destinationMessage);
-            clientSocket.sendATextMessage("Message '" + message + "' was sent to " + clientName + ".");
+            clientSocket.sendATextMessage("Interfaces.Message '" + message + "' was sent to " + clientName + ".");
         }
         else {
             clientSocket.sendATextMessage(clientName + " was not found, please choose an online client. Use command LIST to see all clients online");
@@ -51,7 +55,7 @@ public class ChatServerWorker implements Runnable, ServerWorker {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            mapDataStorage.removeClient(connectedClientsNickname);
+            hashmapDatastoreHandler.removeClient(connectedClientsNickname);
             Thread.currentThread().interrupt();
             clientSocket.sendATextMessage("shutting down now...");
             System.exit(0);
@@ -69,7 +73,7 @@ public class ChatServerWorker implements Runnable, ServerWorker {
 
 
     private String listAllClientsOnline() {
-        List<String> clientsList = mapDataStorage.getAllClients();
+        List<String> clientsList = hashmapDatastoreHandler.getAllClients();
         clientsList.remove(connectedClientsNickname);
         StringBuilder result = new StringBuilder();
 
@@ -106,7 +110,7 @@ public class ChatServerWorker implements Runnable, ServerWorker {
 
         } else if (clientResponse.equals(SERVER_MENU_OPTION_3)) {
             clientSocket.sendATextMessage("Thank you for using Espresso Chat.\nQuitting now...");
-            mapDataStorage.removeClient(connectedClientsNickname);
+            hashmapDatastoreHandler.removeClient(connectedClientsNickname);
             clientSocket.getSocket().close();
 
         }

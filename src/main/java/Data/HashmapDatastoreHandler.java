@@ -1,18 +1,20 @@
+package Data;
+
+import Interfaces.DataStoreHandler;
+import Channel.ClientSocket;
+
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
-public class MapDataStorage implements DataService {
+public class HashmapDatastoreHandler implements DataStoreHandler {
 
-    private static Map clientsMap;
-    private static MapDataStorage mapDataStorage = new MapDataStorage();
+    HashmapDataStore hashmapDataStore;
+    Map clientsMap;
 
-    private MapDataStorage() {
-       clientsMap = new ConcurrentHashMap<String, ClientSocket>();
+    public HashmapDatastoreHandler() {
+        hashmapDataStore = HashmapDataStore.getInstance();
+        clientsMap = hashmapDataStore.getClientsMap();
     }
 
-    public static MapDataStorage getInstance() {
-        return mapDataStorage;
-    }
 
     public ClientSocket getClient(String clientNickName) {
         if (clientsMap.containsKey(clientNickName)) {

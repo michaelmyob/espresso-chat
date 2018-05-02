@@ -1,3 +1,9 @@
+package Server;
+
+import Data.HashmapDatastoreHandler;
+import Interfaces.Server;
+import Channel.ClientSocket;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -6,7 +12,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 public class ChatServer implements Server, Runnable {
 
@@ -15,7 +20,6 @@ public class ChatServer implements Server, Runnable {
     private final int MAX_NUM_OF_THREADS = 20;
     ExecutorService executorService;
     private final String SERVER_QUIT_RESPONSE = "QUIT";
-    String connectedClientsNickname;
 
 
     public ChatServer(int port) {
@@ -29,12 +33,12 @@ public class ChatServer implements Server, Runnable {
 
     public void run() {
 
-        System.out.println("Server is running and ready for chatting...");
+        System.out.println("Interfaces.Server is running and ready for chatting...");
 
         try (ServerSocket socket = new ServerSocket(port)) {
 
             while (true) {
-                MapDataStorage listOfClients = MapDataStorage.getInstance();
+                HashmapDatastoreHandler listOfClients = HashmapDatastoreHandler.getInstance();
 
                 Socket incomingConnection = socket.accept();
 

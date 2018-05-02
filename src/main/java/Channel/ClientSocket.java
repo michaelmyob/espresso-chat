@@ -1,3 +1,8 @@
+package Channel;
+
+import Interfaces.Message;
+import Message.TextMessage;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;

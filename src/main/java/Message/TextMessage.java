@@ -1,3 +1,7 @@
+package Message;
+
+import Interfaces.Message;
+
 import java.io.Serializable;
 
 public class TextMessage implements Message, Serializable {
