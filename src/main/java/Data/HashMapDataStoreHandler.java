@@ -1,7 +1,11 @@
 package Data;
 
+import Comms.TextMessageSender;
 import Interfaces.DataStoreHandler;
-import Channel.MessageChannel;
+import Comms.MessageChannel;
+import Interfaces.Message;
+import Interfaces.MessageSender;
+import Message.TextMessage;
 
 import java.util.*;
 
@@ -25,15 +29,15 @@ public class HashMapDataStoreHandler implements DataStoreHandler {
 
     public boolean addClient(String clientNickName, MessageChannel messageChannel) {
         if (clientNickName.isEmpty()) {
-            messageChannel.sendATextMessage("You've not entered any text, please choose a valid nickname");
+            sendResponse("You've not entered any text, please choose a valid nickname", messageChannel);
             return false;
         }
         else if (clientsMap.containsKey(clientNickName)) {
-            messageChannel.sendATextMessage("Oops, that nickname already exists, please choose another nickname");
+            sendResponse("Oops, that nickname already exists, please choose another nickname", messageChannel);
             return false;
         }
         clientsMap.put(clientNickName, messageChannel);
-        messageChannel.sendATextMessage("Nickname '" + clientNickName + "' is now registered\n");
+        sendResponse("Nickname '" + clientNickName + "' is now registered\n", messageChannel);
         return true;
     }
 
@@ -49,5 +53,11 @@ public class HashMapDataStoreHandler implements DataStoreHandler {
         List<String> clientsList = new ArrayList<>();
         clientsList.addAll(clientsMap.keySet());
         return clientsList;
+    }
+
+    private void sendResponse(String message, MessageChannel messageChannel) {
+        Message msg = new TextMessage("server", message);
+        MessageSender sender = new TextMessageSender();
+        sender.send(msg, messageChannel);
     }
 }

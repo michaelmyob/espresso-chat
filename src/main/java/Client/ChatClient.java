@@ -56,7 +56,7 @@ public class ChatClient implements Client {
 
                     String input = readFromKeyboard.readLine();
 
-                    Message messageSentToServer = new TextMessage(input);
+                    Message messageSentToServer = new TextMessage(nickname, input);
 
                     if (input.toUpperCase().equals(SERVER_QUIT_RESPONSE)) {
                         isRunning = false;

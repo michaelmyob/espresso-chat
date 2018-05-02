@@ -1,8 +1,11 @@
 package Server;
 
-import Channel.MessageChannel;
+import Comms.MessageChannel;
+import Interfaces.DataStoreHandler;
 import Interfaces.InputHandler;
-import Data.HashMapDataStoreHandler;
+import Interfaces.MessageSender;
+import Interfaces.Message;
+import Message.TextMessage;
 
 import java.io.*;
 import java.util.List;
@@ -15,25 +18,27 @@ public class ConsoleInputHandler implements Runnable, InputHandler {
 
     MessageChannel messageChannel;
     String connectedClientsNickname;
-    HashMapDataStoreHandler hashmapDatastoreHandler;
+    DataStoreHandler hashMapDataStoreHandler;
+    MessageSender messageSender;
 
-    public ConsoleInputHandler(MessageChannel messageChannel, HashMapDataStoreHandler hashmapDatastoreHandler) {
+    public ConsoleInputHandler(MessageChannel messageChannel, DataStoreHandler hashMapDataStoreHandler, MessageSender messageSender) {
         this.messageChannel = messageChannel;
-        this.hashmapDatastoreHandler = hashmapDatastoreHandler;
+        this.hashMapDataStoreHandler = hashMapDataStoreHandler;
         this.connectedClientsNickname = messageChannel.clientNickName;
+        this.messageSender = messageSender;
     }
 
-    private void send(String clientName, String message) {
-        MessageChannel destinationMessageChannel = hashmapDatastoreHandler.getClient(clientName);
-        if (destinationMessageChannel != null) {
-            String destinationMessage = connectedClientsNickname + " says: " + message;
-            destinationMessageChannel.sendATextMessage(destinationMessage);
-            messageChannel.sendATextMessage("Message '" + message + "' was sent to " + clientName + ".");
-        }
-        else {
-            messageChannel.sendATextMessage(clientName + " was not found, please choose an online client. Use command LIST to see all clients online");
-        }
-    }
+//    private void send(String clientName, String message) {
+//        MessageChannel destinationMessageChannel = hashMapDataStoreHandler.getClient(clientName);
+//        if (destinationMessageChannel != null) {
+//            String destinationMessage = connectedClientsNickname + " says: " + message;
+//            destinationMessageChannel.sendATextMessage(destinationMessage);
+//            sendResponse("Message '" + message + "' was sent to " + clientName + ".");
+//        }
+//        else {
+//            sendResponse(clientName + " was not found, please choose an online client. Use command LIST to see all clients online");
+//        }
+//    }
 
     public void run() {
 
@@ -43,23 +48,24 @@ public class ConsoleInputHandler implements Runnable, InputHandler {
 
             String messageReceivedFromClient;
 
-            messageChannel.sendATextMessage("Please choose from options below:");
-            messageChannel.sendATextMessage(displayOptions());
+            sendResponse("Please choose from options below:");
+            sendResponse(displayOptions());
 
             while (true) {
                 if (!messageChannel.getSocket().isClosed() && messageChannel.getSocket() != null) {
 
-                    messageReceivedFromClient = readFromClient.readLine();
+                     messageReceivedFromClient = readFromClient.readLine();
 
+                    System.out.println(messageReceivedFromClient);
                     processClientsSelection(messageReceivedFromClient);
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            hashmapDatastoreHandler.removeClient(connectedClientsNickname);
+            hashMapDataStoreHandler.removeClient(connectedClientsNickname);
             Thread.currentThread().interrupt();
-            messageChannel.sendATextMessage("shutting down now...");
+            sendResponse("shutting down now...");
             System.exit(0);
             // TODO - Fix this quitting the thread @ the server level
         }
@@ -67,7 +73,7 @@ public class ConsoleInputHandler implements Runnable, InputHandler {
 
     private String displayOptions() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(SERVER_MENU_OPTION_1 + ": List all clients online\n");
+        stringBuilder.append("\n" + SERVER_MENU_OPTION_1 + ": List all clients online\n");
         stringBuilder.append(SERVER_MENU_OPTION_2 + ": Send a message\n");
         stringBuilder.append(SERVER_MENU_OPTION_3 + ": Quit");
         return stringBuilder.toString();
@@ -75,7 +81,7 @@ public class ConsoleInputHandler implements Runnable, InputHandler {
 
 
     private String listAllClientsOnline() {
-        List<String> clientsList = hashmapDatastoreHandler.getAllClients();
+        List<String> clientsList = hashMapDataStoreHandler.getAllClients();
         clientsList.remove(connectedClientsNickname);
         StringBuilder result = new StringBuilder();
 
@@ -96,29 +102,37 @@ public class ConsoleInputHandler implements Runnable, InputHandler {
         String clientResponse = messageReceivedFromClient.toUpperCase();
 
         if (clientResponse.equals(SERVER_MENU_OPTION_1)) {
-            messageChannel.sendATextMessage(listAllClientsOnline());
+            sendResponse(listAllClientsOnline());
 
         } else if (clientResponse.equals(SERVER_MENU_OPTION_2)) {
-            messageChannel.sendATextMessage("Please enter a client name:");
+            sendResponse("Please enter a client name:");
 
             InputStream inputStream = messageChannel.getInputStream();
             BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
 
             String clientNickName = readFromClient.readLine();
-            messageChannel.sendATextMessage("Please write a message:");
+            sendResponse("Please write a message:");
 
             String messageToBeSent = readFromClient.readLine();
-            send(clientNickName, messageToBeSent);
+            MessageChannel destinationMessageChannel = hashMapDataStoreHandler.getClient(clientNickName);
+            Message destinationMessage = new TextMessage(messageChannel.clientNickName, messageToBeSent);
+            messageSender.send(destinationMessage, destinationMessageChannel);
 
         } else if (clientResponse.equals(SERVER_MENU_OPTION_3)) {
-            messageChannel.sendATextMessage("Thank you for using Espresso Chat.\nQuitting now...");
-            hashmapDatastoreHandler.removeClient(connectedClientsNickname);
+            sendResponse("Thank you for using Espresso Chat.\nQuitting now...");
+            hashMapDataStoreHandler.removeClient(connectedClientsNickname);
             messageChannel.getSocket().close();
 
         }
         else {
-            messageChannel.sendATextMessage("Invalid option selected, please try again!\n");
+            sendResponse("Invalid option selected, please try again!\n");
         }
+    }
+    
+    
+    private void sendResponse(String message) {
+        Message msg = new TextMessage("server", message);
+        messageSender.send(msg, messageChannel);
     }
 }
 

@@ -1,5 +1,5 @@
 package Interfaces;
-import Channel.MessageChannel;
+import Comms.MessageChannel;
 
 import java.util.List;
 

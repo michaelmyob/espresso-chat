@@ -1,9 +1,14 @@
 package Server;
 
+import Comms.TextMessageSender;
 import Data.HashMapDataStore;
 import Data.HashMapDataStoreHandler;
+import Interfaces.DataStoreHandler;
+import Interfaces.Message;
+import Interfaces.MessageSender;
 import Interfaces.Server;
-import Channel.MessageChannel;
+import Comms.MessageChannel;
+import Message.TextMessage;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -22,6 +27,8 @@ public class ChatServer implements Server, Runnable {
     private final int MAX_NUM_OF_THREADS = 20;
     ExecutorService executorService;
     private final String SERVER_QUIT_RESPONSE = "QUIT";
+    DataStoreHandler dataStoreHandler;
+    MessageSender messageSender;
 
 
     public ChatServer(int port) {
@@ -30,7 +37,7 @@ public class ChatServer implements Server, Runnable {
         } else {
             this.port = port;
         }
-        executorService = Executors.newFixedThreadPool(MAX_NUM_OF_THREADS);
+        initialise();
     }
 
     public void run() {
@@ -40,23 +47,22 @@ public class ChatServer implements Server, Runnable {
         try (ServerSocket socket = new ServerSocket(port)) {
 
             while (true) {
-                HashMapDataStore hashMapDataStore = HashMapDataStore.getInstance();
-                Map listOfClients = hashMapDataStore.getClientsMap();
-                HashMapDataStoreHandler dataStoreHandler = new HashMapDataStoreHandler(listOfClients);
 
                 Socket incomingConnection = socket.accept();
 
                 InputStream inputStream = incomingConnection.getInputStream();
                 BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
                 String nickName = readFromClient.readLine();
-                MessageChannel client = new MessageChannel(nickName, incomingConnection);
 
-                if (dataStoreHandler.addClient(nickName, client)) {
-                    ConsoleInputHandler worker = new ConsoleInputHandler(client, dataStoreHandler);
+                MessageChannel messageChannel = new MessageChannel(nickName, incomingConnection);
+
+                if (dataStoreHandler.addClient(nickName, messageChannel)) {
+                    ConsoleInputHandler worker = new ConsoleInputHandler(messageChannel, dataStoreHandler, messageSender);
                     executorService.submit(worker);
                 }
                 else {
-                    client.sendATextMessage(SERVER_QUIT_RESPONSE);
+                    Message msg = new TextMessage("server", SERVER_QUIT_RESPONSE);
+                    messageSender.send(msg, messageChannel);
                     incomingConnection.close();
                 }
 
@@ -66,8 +72,19 @@ public class ChatServer implements Server, Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        finally {
+            executorService.shutdown();
+        }
+
+    }
 
 
+    private void initialise() {
+        executorService = Executors.newFixedThreadPool(MAX_NUM_OF_THREADS);
+        HashMapDataStore hashMapDataStore = HashMapDataStore.getInstance();
+        Map listOfClients = hashMapDataStore.getClientsMap();
+        dataStoreHandler = new HashMapDataStoreHandler(listOfClients);
+        messageSender = new TextMessageSender();
     }
 
 

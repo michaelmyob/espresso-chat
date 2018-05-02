@@ -3,7 +3,7 @@ package Data;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import Channel.MessageChannel;
+import Comms.MessageChannel;
 
 public class HashMapDataStore {
 
