@@ -1,8 +1,9 @@
 package Server;
 
-import Data.HashmapDatastoreHandler;
+import Data.HashMapDataStore;
+import Data.HashMapDataStoreHandler;
 import Interfaces.Server;
-import Channel.ClientSocket;
+import Channel.MessageChannel;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,6 +11,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -33,21 +35,24 @@ public class ChatServer implements Server, Runnable {
 
     public void run() {
 
-        System.out.println("Interfaces.Server is running and ready for chatting...");
+        System.out.println("Server is running and ready for chatting...");
 
         try (ServerSocket socket = new ServerSocket(port)) {
 
             while (true) {
-                HashmapDatastoreHandler listOfClients = HashmapDatastoreHandler.getInstance();
+                HashMapDataStore hashMapDataStore = HashMapDataStore.getInstance();
+                Map listOfClients = hashMapDataStore.getClientsMap();
+                HashMapDataStoreHandler dataStoreHandler = new HashMapDataStoreHandler(listOfClients);
 
                 Socket incomingConnection = socket.accept();
 
                 InputStream inputStream = incomingConnection.getInputStream();
                 BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
                 String nickName = readFromClient.readLine();
-                ClientSocket client = new ClientSocket(nickName, incomingConnection);
-                if (listOfClients.addClient(nickName, client)) {
-                    ChatServerWorker worker = new ChatServerWorker(client, listOfClients);
+                MessageChannel client = new MessageChannel(nickName, incomingConnection);
+
+                if (dataStoreHandler.addClient(nickName, client)) {
+                    ConsoleInputHandler worker = new ConsoleInputHandler(client, dataStoreHandler);
                     executorService.submit(worker);
                 }
                 else {

@@ -1,11 +1,11 @@
 package Interfaces;
-import Channel.ClientSocket;
+import Channel.MessageChannel;
 
 import java.util.List;
 
 public interface DataStoreHandler {
-    ClientSocket getClient(String nickName);
-    boolean addClient(String nickName, ClientSocket clientSocket);
+    MessageChannel getClient(String nickName);
+    boolean addClient(String nickName, MessageChannel messageChannel);
     boolean removeClient(String nickName);
     List<String> getAllClients();
 

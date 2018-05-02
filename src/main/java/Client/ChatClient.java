@@ -18,7 +18,7 @@ public class ChatClient implements Client {
     PrintWriter writer;
     private final String SERVER_QUIT_RESPONSE = "QUIT";
 
-    ChatClient(String ip, int port, String nickname) {
+    public ChatClient(String ip, int port, String nickname) {
         this.destinationIP = ip;
         this.destinationPort = port;
         this.nickname = nickname;
@@ -42,7 +42,6 @@ public class ChatClient implements Client {
             boolean isRunning = true;
 
             writer.println(nickname);
-            writer.flush();
 
             String response = readFromServer.readLine();
             if (response.equals(SERVER_QUIT_RESPONSE)) {
@@ -64,7 +63,6 @@ public class ChatClient implements Client {
                     }
 
                     writer.println(messageSentToServer);
-                    writer.flush();
                 }
             }
         } catch (IOException e) {

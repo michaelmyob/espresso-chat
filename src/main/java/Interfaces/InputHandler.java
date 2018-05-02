@@ -1,5 +1,5 @@
 package Interfaces;
 
-public interface ServerWorker {
+public interface InputHandler {
     void run();
 }

@@ -9,7 +9,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-public class ClientSocket {
+public class MessageChannel {
 
     private Socket socket;
     public String clientNickName;
@@ -19,7 +19,7 @@ public class ClientSocket {
         return socket;
     }
 
-    public ClientSocket(String nickName, Socket socket) {
+    public MessageChannel(String nickName, Socket socket) {
         this.clientNickName = nickName;
         this.socket = socket;
     }

@@ -1,51 +1,53 @@
 package Server;
 
-import Interfaces.ServerWorker;
+import Channel.MessageChannel;
+import Interfaces.InputHandler;
+import Data.HashMapDataStoreHandler;
 
 import java.io.*;
 import java.util.List;
 
-public class ChatServerWorker implements Runnable, ServerWorker {
+public class ConsoleInputHandler implements Runnable, InputHandler {
 
     private final String SERVER_MENU_OPTION_1 = "LIST";
     private final String SERVER_MENU_OPTION_2 = "SEND";
     private final String SERVER_MENU_OPTION_3 = "QUIT";
 
-    ClientSocket clientSocket;
+    MessageChannel messageChannel;
     String connectedClientsNickname;
-    HashmapDatastoreHandler hashmapDatastoreHandler;
+    HashMapDataStoreHandler hashmapDatastoreHandler;
 
-    public ChatServerWorker(ClientSocket clientSocket, HashmapDatastoreHandler hashmapDatastoreHandler) {
-        this.clientSocket = clientSocket;
+    public ConsoleInputHandler(MessageChannel messageChannel, HashMapDataStoreHandler hashmapDatastoreHandler) {
+        this.messageChannel = messageChannel;
         this.hashmapDatastoreHandler = hashmapDatastoreHandler;
-        this.connectedClientsNickname = clientSocket.clientNickName;
+        this.connectedClientsNickname = messageChannel.clientNickName;
     }
 
     private void send(String clientName, String message) {
-        ClientSocket destinationClientSocket = hashmapDatastoreHandler.getClient(clientName);
-        if (destinationClientSocket!= null) {
+        MessageChannel destinationMessageChannel = hashmapDatastoreHandler.getClient(clientName);
+        if (destinationMessageChannel != null) {
             String destinationMessage = connectedClientsNickname + " says: " + message;
-            destinationClientSocket.sendATextMessage(destinationMessage);
-            clientSocket.sendATextMessage("Interfaces.Message '" + message + "' was sent to " + clientName + ".");
+            destinationMessageChannel.sendATextMessage(destinationMessage);
+            messageChannel.sendATextMessage("Message '" + message + "' was sent to " + clientName + ".");
         }
         else {
-            clientSocket.sendATextMessage(clientName + " was not found, please choose an online client. Use command LIST to see all clients online");
+            messageChannel.sendATextMessage(clientName + " was not found, please choose an online client. Use command LIST to see all clients online");
         }
     }
 
     public void run() {
 
         try {
-            InputStream inputStream = clientSocket.getInputStream();
+            InputStream inputStream = messageChannel.getInputStream();
             BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
 
             String messageReceivedFromClient;
 
-            clientSocket.sendATextMessage("Please choose from options below:");
-            clientSocket.sendATextMessage(displayOptions());
+            messageChannel.sendATextMessage("Please choose from options below:");
+            messageChannel.sendATextMessage(displayOptions());
 
             while (true) {
-                if (!clientSocket.getSocket().isClosed() && clientSocket.getSocket() != null) {
+                if (!messageChannel.getSocket().isClosed() && messageChannel.getSocket() != null) {
 
                     messageReceivedFromClient = readFromClient.readLine();
 
@@ -57,7 +59,7 @@ public class ChatServerWorker implements Runnable, ServerWorker {
         } finally {
             hashmapDatastoreHandler.removeClient(connectedClientsNickname);
             Thread.currentThread().interrupt();
-            clientSocket.sendATextMessage("shutting down now...");
+            messageChannel.sendATextMessage("shutting down now...");
             System.exit(0);
             // TODO - Fix this quitting the thread @ the server level
         }
@@ -94,28 +96,28 @@ public class ChatServerWorker implements Runnable, ServerWorker {
         String clientResponse = messageReceivedFromClient.toUpperCase();
 
         if (clientResponse.equals(SERVER_MENU_OPTION_1)) {
-            clientSocket.sendATextMessage(listAllClientsOnline());
+            messageChannel.sendATextMessage(listAllClientsOnline());
 
         } else if (clientResponse.equals(SERVER_MENU_OPTION_2)) {
-            clientSocket.sendATextMessage("Please enter a client name:");
+            messageChannel.sendATextMessage("Please enter a client name:");
 
-            InputStream inputStream = clientSocket.getInputStream();
+            InputStream inputStream = messageChannel.getInputStream();
             BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
 
             String clientNickName = readFromClient.readLine();
-            clientSocket.sendATextMessage("Please write a message:");
+            messageChannel.sendATextMessage("Please write a message:");
 
             String messageToBeSent = readFromClient.readLine();
             send(clientNickName, messageToBeSent);
 
         } else if (clientResponse.equals(SERVER_MENU_OPTION_3)) {
-            clientSocket.sendATextMessage("Thank you for using Espresso Chat.\nQuitting now...");
+            messageChannel.sendATextMessage("Thank you for using Espresso Chat.\nQuitting now...");
             hashmapDatastoreHandler.removeClient(connectedClientsNickname);
-            clientSocket.getSocket().close();
+            messageChannel.getSocket().close();
 
         }
         else {
-            clientSocket.sendATextMessage("Invalid option selected, please try again!\n");
+            messageChannel.sendATextMessage("Invalid option selected, please try again!\n");
         }
     }
 }
