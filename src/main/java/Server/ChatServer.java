@@ -20,16 +20,16 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class ChatServer implements Server, Runnable {
+public class ChatServer implements Server {
 
     private final int DEFAULT_PORT = 30000;
-    private int port;
-    private final int MAX_NUM_OF_THREADS = 20;
-    ExecutorService executorService;
+    private final int NUM_OF_SERVER_THREADS = 20;
     private final String SERVER_QUIT_RESPONSE = "QUIT";
-    DataStoreHandler dataStoreHandler;
-    MessageSender messageSender;
 
+    private int port;
+    private ExecutorService numberOfServerThreadsAvailable;
+    private DataStoreHandler dataStoreHandler;
+    private MessageSender messageSender;
 
     public ChatServer(int port) {
         if (port == 0) {
@@ -38,6 +38,13 @@ public class ChatServer implements Server, Runnable {
             this.port = port;
         }
         initialise();
+    }
+
+    private void initialise() {
+        numberOfServerThreadsAvailable = Executors.newFixedThreadPool(NUM_OF_SERVER_THREADS);
+        Map listOfClients = HashMapDataStore.getInstance().getClientsMap();
+        dataStoreHandler = new HashMapDataStoreHandler(listOfClients);
+        messageSender = new TextMessageSender();
     }
 
     public void run() {
@@ -51,41 +58,34 @@ public class ChatServer implements Server, Runnable {
                 Socket incomingConnection = socket.accept();
 
                 InputStream inputStream = incomingConnection.getInputStream();
-                BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
-                String nickName = readFromClient.readLine();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
-                MessageChannel messageChannel = new MessageChannel(nickName, incomingConnection);
+                String clientNickname = reader.readLine();
+                MessageChannel messageChannel = new MessageChannel(clientNickname, incomingConnection);
 
-                if (dataStoreHandler.addClient(nickName, messageChannel)) {
-                    ConsoleInputHandler worker = new ConsoleInputHandler(messageChannel, dataStoreHandler, messageSender);
-                    executorService.submit(worker);
-                }
-                else {
-                    Message msg = new TextMessage("server", SERVER_QUIT_RESPONSE);
-                    messageSender.send(msg, messageChannel);
-                    incomingConnection.close();
-                }
-
+                attemptClientRegistration(incomingConnection, clientNickname, messageChannel);
             }
-
 
         } catch (IOException e) {
             e.printStackTrace();
         }
         finally {
-            executorService.shutdown();
+            numberOfServerThreadsAvailable.shutdown();
         }
-
     }
 
+    private void attemptClientRegistration(Socket incomingConnection, String clientNickname, MessageChannel messageChannel) throws IOException {
 
-    private void initialise() {
-        executorService = Executors.newFixedThreadPool(MAX_NUM_OF_THREADS);
-        HashMapDataStore hashMapDataStore = HashMapDataStore.getInstance();
-        Map listOfClients = hashMapDataStore.getClientsMap();
-        dataStoreHandler = new HashMapDataStoreHandler(listOfClients);
-        messageSender = new TextMessageSender();
+        boolean clientCanBeRegistered = dataStoreHandler.addClient(clientNickname, messageChannel);
+
+        if (clientCanBeRegistered) {
+            ConsoleInputHandler consoleInputHandler = new ConsoleInputHandler(messageChannel, dataStoreHandler, messageSender);
+            numberOfServerThreadsAvailable.submit(consoleInputHandler);
+        }
+        else {
+            Message msg = new TextMessage("server", SERVER_QUIT_RESPONSE);
+            messageSender.send(msg, messageChannel);
+            incomingConnection.close();
+        }
     }
-
-
 }
