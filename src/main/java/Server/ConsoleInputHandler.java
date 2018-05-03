@@ -42,12 +42,19 @@ public class ConsoleInputHandler implements Runnable, InputHandler {
 
     public void run() {
 
-        try {
-            InputStream inputStream = messageChannel.getInputStream();
-            BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
-            //TODO - use objectinputstream because we will not relying on strings anymore, we will serialise/deserialise objects
+        TextMessage deserialisedMessage = null;
+        String messageReceivedFromClient;
 
-            String messageReceivedFromClient;
+        try {
+            ObjectInputStream objectInputStream = messageChannel.getInputStream();
+            System.out.println("objectInputStream OK");
+
+            if (objectInputStream.readObject() instanceof TextMessage) {
+                deserialisedMessage = (TextMessage) objectInputStream.readObject();
+                System.out.println("deserialisedMessage: " + deserialisedMessage.messageContents);
+            } else {
+                System.out.println("not instance of TextMessage");
+            }
 
             sendResponse("Please choose from options below:");
             sendResponse(displayOptions());
@@ -55,13 +62,13 @@ public class ConsoleInputHandler implements Runnable, InputHandler {
             while (true) {
                 if (!messageChannel.getSocket().isClosed() && messageChannel.getSocket() != null) {
 
-                     messageReceivedFromClient = readFromClient.readLine();
+                    messageReceivedFromClient = deserialisedMessage.messageContents;
 
                     System.out.println(messageReceivedFromClient);
                     processClientsSelection(messageReceivedFromClient);
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         } finally {
             hashMapDataStoreHandler.removeClient(connectedClientsNickname);

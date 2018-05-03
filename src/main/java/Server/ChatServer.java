@@ -56,11 +56,14 @@ public class ChatServer implements Server {
             while (true) {
 
                 Socket incomingConnection = socket.accept();
+//                System.out.println("accepted!");
 
                 InputStream inputStream = incomingConnection.getInputStream();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
                 String clientNickname = reader.readLine();
+//                System.out.println("nickname = " + clientNickname);
+
                 MessageChannel messageChannel = new MessageChannel(clientNickname, incomingConnection);
 
                 attemptClientRegistration(incomingConnection, clientNickname, messageChannel);

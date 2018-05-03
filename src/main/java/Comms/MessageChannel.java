@@ -3,10 +3,7 @@ package Comms;
 import Interfaces.Message;
 import Message.TextMessage;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 
 public class MessageChannel {
@@ -24,9 +21,9 @@ public class MessageChannel {
         this.socket = socket;
     }
 
-    public InputStream getInputStream() {
+    public ObjectInputStream getInputStream() {
         try {
-            return socket.getInputStream();
+            return new ObjectInputStream(socket.getInputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
