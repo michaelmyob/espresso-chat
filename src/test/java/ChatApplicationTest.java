@@ -16,9 +16,9 @@ public class ChatApplicationTest {
 
 //    @Test
 //    public void canClientSendAMessageToAnotherClient() {
-//        Server server = new ChatServer(0);
+//        Interfaces.Server server = new Server.ChatServer(0);
 //        server.register("sampleClient", getSampleSocketAddress());
-//        Message msg = new TextMessage("Hi there!");
+//        Interfaces.Message msg = new Message.TextMessage("Hi there!");
 ////        assertTrue(server.send("sampleClient", msg));
 //    }
 }

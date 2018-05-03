@@ -15,8 +15,8 @@ public class ChatServerTest {
 //    public void canServerLookupAClient() {
 //        ConcurrentHashMap client = new ConcurrentHashMap();
 //        client.put("testClient", "blah blah");
-//        Server server = new ChatServer(0);
-//        Message message = new TextMessage("Hello World!");
+//        Interfaces.Server server = new Server.ChatServer(0);
+//        Interfaces.Message message = new Message.TextMessage("Hello World!");
 //
 //        assertTrue(server.send("testClient", message));
 //
@@ -25,7 +25,7 @@ public class ChatServerTest {
 //    @Test
 //    public void serverCanRegisterAClient() {
 //
-//        Server server = new ChatServer(0);
+//        Interfaces.Server server = new Server.ChatServer(0);
 //        InetSocketAddress clientAddress = new InetSocketAddress("localhost",51748);
 //        assertTrue(server.register("testNickName", clientAddress));
 //    }
@@ -33,7 +33,7 @@ public class ChatServerTest {
 //    @Test
 //    public void serverDeclinesDuplicateClientRegistration() {
 //
-//        Server server = new ChatServer(0);
+//        Interfaces.Server server = new Server.ChatServer(0);
 //        InetSocketAddress clientAddress = new InetSocketAddress("localhost",51748);
 //        server.register("testNickName", clientAddress);
 //
@@ -43,7 +43,7 @@ public class ChatServerTest {
 //    @Test
 //    public void serverCanLookupAClient() {
 //
-//        Server server = new ChatServer(0);
+//        Interfaces.Server server = new Server.ChatServer(0);
 //        server.register("testNickName");
 //        assertTrue(server.lookupClient("testNickName"));
 //
