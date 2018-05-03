@@ -45,6 +45,7 @@ public class ConsoleInputHandler implements Runnable, InputHandler {
         try {
             InputStream inputStream = messageChannel.getInputStream();
             BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
+            //TODO - use objectinputstream because we will not relying on strings anymore, we will serialise/deserialise objects
 
             String messageReceivedFromClient;
 
