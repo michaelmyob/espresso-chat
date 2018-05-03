@@ -71,7 +71,7 @@ public class ConsoleInputHandler implements Runnable, InputHandler {
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         } finally {
-            hashMapDataStoreHandler.removeClient(connectedClientsNickname);
+            hashMapDataStoreHandler.removeClient(messageChannel);
             Thread.currentThread().interrupt();
             sendResponse("shutting down now...");
             System.exit(0);
@@ -128,7 +128,7 @@ public class ConsoleInputHandler implements Runnable, InputHandler {
 
         } else if (clientResponse.equals(SERVER_MENU_OPTION_3)) {
             sendResponse("Thank you for using Espresso Chat.\nQuitting now...");
-            hashMapDataStoreHandler.removeClient(connectedClientsNickname);
+            hashMapDataStoreHandler.removeClient(messageChannel);
             messageChannel.getSocket().close();
 
         }

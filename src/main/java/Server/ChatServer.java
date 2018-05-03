@@ -66,7 +66,7 @@ public class ChatServer implements Server {
 
                 MessageChannel messageChannel = new MessageChannel(clientNickname, incomingConnection);
 
-                attemptClientRegistration(incomingConnection, clientNickname, messageChannel);
+                attemptClientRegistration(incomingConnection, messageChannel);
             }
 
         } catch (IOException e) {
@@ -77,9 +77,9 @@ public class ChatServer implements Server {
         }
     }
 
-    private void attemptClientRegistration(Socket incomingConnection, String clientNickname, MessageChannel messageChannel) throws IOException {
+    private void attemptClientRegistration(Socket incomingConnection, MessageChannel messageChannel) throws IOException {
 
-        boolean clientCanBeRegistered = dataStoreHandler.addClient(clientNickname, messageChannel);
+        boolean clientCanBeRegistered = dataStoreHandler.addClient(messageChannel);
 
         if (clientCanBeRegistered) {
             ConsoleInputHandler consoleInputHandler = new ConsoleInputHandler(messageChannel, dataStoreHandler, messageSender);
