@@ -12,58 +12,67 @@ public class ChatClient implements Client {
     String nickname;
     String destinationIP;
     int destinationPort;
-    BufferedReader readFromServer;
+//    BufferedReader readFromServer;
     BufferedReader readFromKeyboard;
-    OutputStream outputStream;
-    PrintWriter writer;
+//    OutputStream outputStream;
+//    PrintWriter writer;
+    ObjectOutputStream objectOutputStream;
+    ObjectInputStream objectInputStream;
+    boolean isRunning;
+
+
     private final String SERVER_QUIT_RESPONSE = "QUIT";
 
     public ChatClient(String ip, int port, String nickname) {
         this.destinationIP = ip;
         this.destinationPort = port;
         this.nickname = nickname;
+        this.isRunning = true;
     }
 
     public void startClient() {
 
         try (Socket socket = new Socket(destinationIP, destinationPort)) {
 
-
             readFromKeyboard = new BufferedReader(new InputStreamReader(System.in));
 
-            InputStream inputStream = socket.getInputStream();
-            readFromServer = new BufferedReader(new InputStreamReader(inputStream));
-
-            outputStream = socket.getOutputStream();
-            writer = new PrintWriter(outputStream, true);
+            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            objectInputStream = new ObjectInputStream(socket.getInputStream());
 
             checkForIncomingMessages();
 
-            boolean isRunning = true;
 
-            writer.println(nickname);
+//            writer.println(nickname);
+            TextMessage nicknameToBeRegistered = new TextMessage(nickname, nickname);
+            objectOutputStream.writeObject(nicknameToBeRegistered);
+            objectOutputStream.flush();
+            System.out.println("[DEBUG] nickname sent to server!");
 
-            String response = readFromServer.readLine();
-            if (response.equals(SERVER_QUIT_RESPONSE)) {
-                isRunning = false;
-            }
-
-
+//            String response = readFromServer.readLine();
+//            Object serverResponse = objectInputStream.readObject();
+//            if (serverResponse instanceof TextMessage) {
+//                TextMessage response = (TextMessage) serverResponse;
+//                if (response.messageContents.equals(SERVER_QUIT_RESPONSE)) {
+//                    isRunning = false;
+//                }
+//            }
 
             while (isRunning) {
 
-                if (!readFromServer.ready() ) {
+//                if (objectInputStream.available() > 0) {
 
                     String input = readFromKeyboard.readLine();
 
-                    Message messageSentToServer = new TextMessage(nickname, input);
+                    TextMessage messageSentToServer = new TextMessage(nickname, input);
 
                     if (input.toUpperCase().equals(SERVER_QUIT_RESPONSE)) {
                         isRunning = false;
                     }
 
-                    writer.println(messageSentToServer);
-                }
+                    System.out.println("about to write object: " + messageSentToServer.messageContents);
+                    objectOutputStream.writeObject(messageSentToServer);
+                    objectOutputStream.flush();
+//                }
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -76,15 +85,28 @@ public class ChatClient implements Client {
     private void checkForIncomingMessages() {
         new Thread(
                 () -> {
-                    String messageReceivedFromServer;
+                    Object messageReceivedFromServer;
 
                     try {
-                        while (true) {
-                            if ((messageReceivedFromServer = readFromServer.readLine()) != null) {
-                                System.out.println(messageReceivedFromServer);
+                        while (isRunning) {
+                            if ((messageReceivedFromServer = objectInputStream.readObject()) != null) {
+//                            if (objectInputStream.available() > 0) {
+
+//                                messageReceivedFromServer = objectInputStream.readObject();
+
+                                if (messageReceivedFromServer instanceof TextMessage) {
+                                    TextMessage receivedMessage = (TextMessage) messageReceivedFromServer;
+
+                                    if (receivedMessage.messageContents.equals(SERVER_QUIT_RESPONSE)) {
+                                        isRunning = false;
+                                    }
+
+                                    System.out.println(receivedMessage);
+                                }
+
                             }
                         }
-                    } catch (IOException e) {
+                    } catch (IOException | ClassNotFoundException e) {
                         e.printStackTrace();
                     }
 

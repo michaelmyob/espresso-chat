@@ -10,10 +10,7 @@ import Interfaces.Server;
 import Comms.MessageChannel;
 import Message.TextMessage;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Map;
@@ -30,6 +27,7 @@ public class ChatServer implements Server {
     private ExecutorService numberOfServerThreadsAvailable;
     private DataStoreHandler dataStoreHandler;
     private MessageSender messageSender;
+    private MessageChannel messageChannel;
 
     public ChatServer(int port) {
         if (port == 0) {
@@ -56,17 +54,16 @@ public class ChatServer implements Server {
             while (true) {
 
                 Socket incomingConnection = socket.accept();
-//                System.out.println("accepted!");
 
-                InputStream inputStream = incomingConnection.getInputStream();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                ObjectOutputStream OOS = new ObjectOutputStream(incomingConnection.getOutputStream()); // Keep this - the client side needs to read that a stream exists
+                ObjectInputStream OIS = new ObjectInputStream(incomingConnection.getInputStream());
 
-                String clientNickname = reader.readLine();
-//                System.out.println("nickname = " + clientNickname);
+                Message clientMessage = readClientNickName(OIS);
+                TextMessage clientNicknameMessageObject = (TextMessage) clientMessage;
+                String clientNickname = clientNicknameMessageObject.messageContents;
+                messageChannel = new MessageChannel(clientNickname, incomingConnection, OOS, OIS);
 
-                MessageChannel messageChannel = new MessageChannel(clientNickname, incomingConnection);
-
-                attemptClientRegistration(incomingConnection, messageChannel);
+                attemptClientRegistration(incomingConnection);
             }
 
         } catch (IOException e) {
@@ -77,18 +74,39 @@ public class ChatServer implements Server {
         }
     }
 
-    private void attemptClientRegistration(Socket incomingConnection, MessageChannel messageChannel) throws IOException {
 
-        boolean clientCanBeRegistered = dataStoreHandler.addClient(messageChannel);
+    private Message readClientNickName(ObjectInputStream inputStream) {
+
+        try {
+            Object clientNickname = inputStream.readObject();
+            if (clientNickname instanceof TextMessage) {
+                System.out.println("[DEBUG] got the nickname from the client: " + ((TextMessage) clientNickname).sender);
+                return (TextMessage) clientNickname;
+            }
+        }
+        catch (ClassNotFoundException | IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private void attemptClientRegistration(Socket incomingConnection) throws IOException {
+
+        boolean clientCanBeRegistered = dataStoreHandler.addClient(this.messageChannel);
 
         if (clientCanBeRegistered) {
-            ConsoleInputHandler consoleInputHandler = new ConsoleInputHandler(messageChannel, dataStoreHandler, messageSender);
-            numberOfServerThreadsAvailable.submit(consoleInputHandler);
+            createClientHandler();
+            System.out.println("[DEBUG] Handler created");
         }
         else {
             Message msg = new TextMessage("server", SERVER_QUIT_RESPONSE);
-            messageSender.send(msg, messageChannel);
+            messageSender.send(msg, this.messageChannel);
             incomingConnection.close();
         }
+    }
+
+    private void createClientHandler() {
+        ConsoleInputHandler consoleInputHandler = new ConsoleInputHandler(this.messageChannel, dataStoreHandler, messageSender);
+        numberOfServerThreadsAvailable.submit(consoleInputHandler);
     }
 }

@@ -46,21 +46,20 @@ public class ConsoleInputHandler implements Runnable, InputHandler {
         String messageReceivedFromClient;
 
         try {
-            ObjectInputStream objectInputStream = messageChannel.getInputStream();
-            System.out.println("objectInputStream OK");
-
-            if (objectInputStream.readObject() instanceof TextMessage) {
-                deserialisedMessage = (TextMessage) objectInputStream.readObject();
-                System.out.println("deserialisedMessage: " + deserialisedMessage.messageContents);
-            } else {
-                System.out.println("not instance of TextMessage");
-            }
-
             sendResponse("Please choose from options below:");
             sendResponse(displayOptions());
 
+            System.out.println("[DEBUG] STARTING WHILE TRUE NOW:");
             while (true) {
+
+//                System.out.println("[DEBUG] messageChannel.getSocket().isClosed(): " + messageChannel.getSocket().isClosed());
+//                System.out.println("[DEBUG] mmessageChannel.getSocket(): " + messageChannel.getSocket());
+//                System.out.println();
+
                 if (!messageChannel.getSocket().isClosed() && messageChannel.getSocket() != null) {
+
+                    deserialisedMessage = (TextMessage) messageChannel.getInputStream().readObject();
+                    System.out.println("[DEBUG] deserialisedMessage: " + deserialisedMessage.messageContents);
 
                     messageReceivedFromClient = deserialisedMessage.messageContents;
 
@@ -105,7 +104,7 @@ public class ConsoleInputHandler implements Runnable, InputHandler {
         return result.toString();
     }
 
-    private void processClientsSelection(String messageReceivedFromClient) throws IOException {
+    private void processClientsSelection(String messageReceivedFromClient) throws IOException, ClassNotFoundException {
 
         String clientResponse = messageReceivedFromClient.toUpperCase();
 
@@ -116,12 +115,18 @@ public class ConsoleInputHandler implements Runnable, InputHandler {
             sendResponse("Please enter a client name:");
 
             InputStream inputStream = messageChannel.getInputStream();
-            BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
+//            BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
 
-            String clientNickName = readFromClient.readLine();
+//            String clientNickName = readFromClient.readLine();
+            TextMessage clientNickNameResponse = (TextMessage)messageChannel.getInputStream().readObject();
+            String clientNickName = clientNickNameResponse.messageContents;
+
             sendResponse("Please write a message:");
 
-            String messageToBeSent = readFromClient.readLine();
+//            String messageToBeSent = readFromClient.readLine();
+            TextMessage clientMsgToBeSentResponse = (TextMessage)messageChannel.getInputStream().readObject();
+            String messageToBeSent = clientMsgToBeSentResponse.messageContents;
+
             MessageChannel destinationMessageChannel = hashMapDataStoreHandler.getClient(clientNickName);
             Message destinationMessage = new TextMessage(messageChannel.clientNickName, messageToBeSent);
             messageSender.send(destinationMessage, destinationMessageChannel);
@@ -141,6 +146,7 @@ public class ConsoleInputHandler implements Runnable, InputHandler {
     private void sendResponse(String message) {
         Message msg = new TextMessage("server", message);
         messageSender.send(msg, messageChannel);
+
     }
 }
 

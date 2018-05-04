@@ -15,9 +15,9 @@ public class TextMessage implements Message, Serializable {
 
     }
 
-//    public String toString() {
-//        return sender + " says: " + messageContents;
-//    }
+    public String toString() {
+        return sender + " says: " + messageContents;
+    }
 
 //    public boolean equals(Object obj) {
 //        return (obj instanceof String) &&

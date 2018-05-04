@@ -10,25 +10,27 @@ public class MessageChannel {
 
     private Socket socket;
     public String clientNickName;
+    private ObjectOutputStream OOS;
+    private ObjectInputStream OIS;
 
 
     public Socket getSocket() {
         return socket;
     }
 
-    public MessageChannel(String nickName, Socket socket) {
+    public MessageChannel(String nickName, Socket socket, ObjectOutputStream OOS, ObjectInputStream OIS) {
         this.clientNickName = nickName;
         this.socket = socket;
+        this.OOS = OOS;
+        this.OIS = OIS;
     }
 
     public ObjectInputStream getInputStream() {
-        try {
-            return new ObjectInputStream(socket.getInputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+       return this.OIS;
+    }
 
-        return null;
+    public ObjectOutputStream getOutputStream() {
+        return this.OOS;
     }
 
 //    private void sendAMessageThroughSocket(Message message) {
