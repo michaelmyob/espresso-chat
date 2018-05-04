@@ -13,8 +13,6 @@ public class TextMessageSender implements MessageSender{
 
     public void send(Message message, MessageChannel messageChannel) {
         try {
-//            ObjectOutputStream outputStream = messageChannel.getOutputStream();
-//            PrintWriter writer = new PrintWriter(outputStream, true);
             TextMessage msg = (TextMessage) message;
             messageChannel.getOutputStream().writeObject(msg);
             messageChannel.getOutputStream().flush();

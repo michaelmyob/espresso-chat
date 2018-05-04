@@ -55,13 +55,12 @@ public class ChatServer implements Server {
 
                 Socket incomingConnection = socket.accept();
 
-                ObjectOutputStream OOS = new ObjectOutputStream(incomingConnection.getOutputStream()); // Keep this - the client side needs to read that a stream exists
-                ObjectInputStream OIS = new ObjectInputStream(incomingConnection.getInputStream());
+                messageChannel = new MessageChannel(incomingConnection);
 
-                Message clientMessage = readClientNickName(OIS);
+                Message clientMessage = readClientNickName(messageChannel.getInputStream());
                 TextMessage clientNicknameMessageObject = (TextMessage) clientMessage;
                 String clientNickname = clientNicknameMessageObject.messageContents;
-                messageChannel = new MessageChannel(clientNickname, incomingConnection, OOS, OIS);
+                messageChannel.addNicknameToChannel(clientNickname);
 
                 attemptClientRegistration(incomingConnection);
             }
@@ -80,7 +79,6 @@ public class ChatServer implements Server {
         try {
             Object clientNickname = inputStream.readObject();
             if (clientNickname instanceof TextMessage) {
-                System.out.println("[DEBUG] got the nickname from the client: " + ((TextMessage) clientNickname).sender);
                 return (TextMessage) clientNickname;
             }
         }
@@ -96,7 +94,6 @@ public class ChatServer implements Server {
 
         if (clientCanBeRegistered) {
             createClientHandler();
-            System.out.println("[DEBUG] Handler created");
         }
         else {
             Message msg = new TextMessage("server", SERVER_QUIT_RESPONSE);

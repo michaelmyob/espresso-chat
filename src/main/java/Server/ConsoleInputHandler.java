@@ -16,10 +16,10 @@ public class ConsoleInputHandler implements Runnable, InputHandler {
     private final String SERVER_MENU_OPTION_2 = "SEND";
     private final String SERVER_MENU_OPTION_3 = "QUIT";
 
-    MessageChannel messageChannel;
-    String connectedClientsNickname;
-    DataStoreHandler hashMapDataStoreHandler;
-    MessageSender messageSender;
+    private MessageChannel messageChannel;
+    private String connectedClientsNickname;
+    private DataStoreHandler hashMapDataStoreHandler;
+    private MessageSender messageSender;
 
     public ConsoleInputHandler(MessageChannel messageChannel, DataStoreHandler hashMapDataStoreHandler, MessageSender messageSender) {
         this.messageChannel = messageChannel;
@@ -28,38 +28,20 @@ public class ConsoleInputHandler implements Runnable, InputHandler {
         this.messageSender = messageSender;
     }
 
-//    private void send(String clientName, String message) {
-//        MessageChannel destinationMessageChannel = hashMapDataStoreHandler.getClient(clientName);
-//        if (destinationMessageChannel != null) {
-//            String destinationMessage = connectedClientsNickname + " says: " + message;
-//            destinationMessageChannel.sendATextMessage(destinationMessage);
-//            sendResponse("Message '" + message + "' was sent to " + clientName + ".");
-//        }
-//        else {
-//            sendResponse(clientName + " was not found, please choose an online client. Use command LIST to see all clients online");
-//        }
-//    }
-
     public void run() {
 
-        TextMessage deserialisedMessage = null;
+        TextMessage deserialisedMessage;
         String messageReceivedFromClient;
 
         try {
             sendResponse("Please choose from options below:");
             sendResponse(displayOptions());
 
-            System.out.println("[DEBUG] STARTING WHILE TRUE NOW:");
             while (true) {
-
-//                System.out.println("[DEBUG] messageChannel.getSocket().isClosed(): " + messageChannel.getSocket().isClosed());
-//                System.out.println("[DEBUG] mmessageChannel.getSocket(): " + messageChannel.getSocket());
-//                System.out.println();
 
                 if (!messageChannel.getSocket().isClosed() && messageChannel.getSocket() != null) {
 
                     deserialisedMessage = (TextMessage) messageChannel.getInputStream().readObject();
-                    System.out.println("[DEBUG] deserialisedMessage: " + deserialisedMessage.messageContents);
 
                     messageReceivedFromClient = deserialisedMessage.messageContents;
 
@@ -72,8 +54,11 @@ public class ConsoleInputHandler implements Runnable, InputHandler {
         } finally {
             hashMapDataStoreHandler.removeClient(messageChannel);
             Thread.currentThread().interrupt();
+            messageChannel.closeStreams();
+
             sendResponse("shutting down now...");
             System.exit(0);
+
             // TODO - Fix this quitting the thread @ the server level
         }
     }
@@ -114,35 +99,31 @@ public class ConsoleInputHandler implements Runnable, InputHandler {
         } else if (clientResponse.equals(SERVER_MENU_OPTION_2)) {
             sendResponse("Please enter a client name:");
 
-            InputStream inputStream = messageChannel.getInputStream();
-//            BufferedReader readFromClient = new BufferedReader(new InputStreamReader(inputStream));
-
-//            String clientNickName = readFromClient.readLine();
             TextMessage clientNickNameResponse = (TextMessage)messageChannel.getInputStream().readObject();
             String clientNickName = clientNickNameResponse.messageContents;
 
             sendResponse("Please write a message:");
 
-//            String messageToBeSent = readFromClient.readLine();
             TextMessage clientMsgToBeSentResponse = (TextMessage)messageChannel.getInputStream().readObject();
             String messageToBeSent = clientMsgToBeSentResponse.messageContents;
 
             MessageChannel destinationMessageChannel = hashMapDataStoreHandler.getClient(clientNickName);
             Message destinationMessage = new TextMessage(messageChannel.clientNickName, messageToBeSent);
             messageSender.send(destinationMessage, destinationMessageChannel);
+            sendResponse("Message '" + messageToBeSent + "' was sent to " + destinationMessageChannel.clientNickName);
 
         } else if (clientResponse.equals(SERVER_MENU_OPTION_3)) {
             sendResponse("Thank you for using Espresso Chat.\nQuitting now...");
             hashMapDataStoreHandler.removeClient(messageChannel);
-            messageChannel.getSocket().close();
 
+            messageChannel.closeStreams();
+            messageChannel.getSocket().close();
         }
         else {
             sendResponse("Invalid option selected, please try again!\n");
         }
     }
-    
-    
+
     private void sendResponse(String message) {
         Message msg = new TextMessage("server", message);
         messageSender.send(msg, messageChannel);

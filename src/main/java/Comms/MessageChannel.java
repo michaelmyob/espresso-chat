@@ -1,8 +1,5 @@
 package Comms;
 
-import Interfaces.Message;
-import Message.TextMessage;
-
 import java.io.*;
 import java.net.Socket;
 
@@ -10,46 +7,45 @@ public class MessageChannel {
 
     private Socket socket;
     public String clientNickName;
-    private ObjectOutputStream OOS;
-    private ObjectInputStream OIS;
-
+    private ObjectOutputStream objectOutputStream;
+    private ObjectInputStream objectInputStream;
 
     public Socket getSocket() {
         return socket;
     }
 
-    public MessageChannel(String nickName, Socket socket, ObjectOutputStream OOS, ObjectInputStream OIS) {
-        this.clientNickName = nickName;
+    public MessageChannel(Socket socket) {
         this.socket = socket;
-        this.OOS = OOS;
-        this.OIS = OIS;
+        intialiseStreams();
+    }
+
+    private void intialiseStreams() {
+        try {
+            this.objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            this.objectInputStream = new ObjectInputStream(socket.getInputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void closeStreams() {
+        try {
+            this.objectOutputStream.close();
+            this.objectInputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void addNicknameToChannel(String clientNickName) {
+        this.clientNickName = clientNickName;
     }
 
     public ObjectInputStream getInputStream() {
-       return this.OIS;
+       return this.objectInputStream;
     }
 
     public ObjectOutputStream getOutputStream() {
-        return this.OOS;
+        return this.objectOutputStream;
     }
-
-//    private void sendAMessageThroughSocket(Message message) {
-//        try {
-//            OutputStream outputStream = socket.getOutputStream();
-//            PrintWriter writer = new PrintWriter(outputStream, true);
-//
-//            writer.println(message);
-//            writer.flush();
-//        } catch (IOException e) {
-//            System.out.println("Error sending message!!!!!!!! Please try again");
-//        }
-//    }
-//
-//
-//    public void sendATextMessage(String message) {
-//        Message msg = new TextMessage(message);
-//        sendAMessageThroughSocket(msg);
-//    }
-
-
 }
