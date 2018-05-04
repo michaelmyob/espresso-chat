@@ -11,11 +11,12 @@ public class ChatClient implements Client {
     private String nickname;
     private String destinationIP;
     private int destinationPort;
-    private BufferedReader readFromKeyboard;
+    private BufferedReader keyboardReader;
     private ObjectOutputStream objectOutputStream;
     private ObjectInputStream objectInputStream;
     private boolean isRunning;
     private final String SERVER_QUIT_RESPONSE = "QUIT";
+    private Socket socket;
 
     public ChatClient(String ip, int port, String nickname) {
         this.destinationIP = ip;
@@ -24,69 +25,94 @@ public class ChatClient implements Client {
         this.isRunning = true;
     }
 
-    public void startClient() {
-
-        try (Socket socket = new Socket(destinationIP, destinationPort)) {
-
-            readFromKeyboard = new BufferedReader(new InputStreamReader(System.in));
-
+    private void initialiseIO() {
+        try {
+            socket = new Socket(destinationIP, destinationPort);
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             objectInputStream = new ObjectInputStream(socket.getInputStream());
+            keyboardReader = new BufferedReader(new InputStreamReader(System.in));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void startClient() {
+
+        initialiseIO();
+
+        try {
 
             checkForIncomingMessages();
-
-            TextMessage nicknameToBeRegistered = new TextMessage(nickname, nickname);
-            objectOutputStream.writeObject(nicknameToBeRegistered);
-            objectOutputStream.flush();
-            System.out.println("[DEBUG] nickname sent to server!");
+            attemptNicknameRegistration();
 
             while (isRunning) {
 
-                String input = readFromKeyboard.readLine();
+                String readFromKeyboardInput = keyboardReader.readLine();
 
-                TextMessage messageSentToServer = new TextMessage(nickname, input);
-
-                if (input.toUpperCase().equals(SERVER_QUIT_RESPONSE)) {
+                if (serverHasSentAQuitResponse(readFromKeyboardInput)) {
                     isRunning = false;
+                } else {
+                    TextMessage messageFromKeyboardInput = new TextMessage(nickname, readFromKeyboardInput);
+                    serialiseToServer(messageFromKeyboardInput);
                 }
-
-                objectOutputStream.writeObject(messageSentToServer);
-                objectOutputStream.flush();
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
         finally {
+
+            //TODO - upon client "QUIT" the server crashes - need to close stream?
+
             System.exit(0);
         }
+    }
+
+    private boolean serverHasSentAQuitResponse(String inputFromServer) {
+        if (inputFromServer.toUpperCase().equals(SERVER_QUIT_RESPONSE)) {
+            return true;
+        }
+        return false;
     }
 
     private void checkForIncomingMessages() {
         new Thread(
                 () -> {
-                    Object messageReceivedFromServer;
 
                     try {
                         while (isRunning) {
-                            if ((messageReceivedFromServer = objectInputStream.readObject()) != null) {
 
-                                if (messageReceivedFromServer instanceof TextMessage) {
-                                    TextMessage receivedMessage = (TextMessage) messageReceivedFromServer;
+                            Object objectReadFromServer = objectInputStream.readObject();
 
-                                    if (receivedMessage.messageContents.equals(SERVER_QUIT_RESPONSE)) {
+                            if (objectReadFromServer != null) {
+
+                                if (objectReadFromServer instanceof TextMessage) {
+                                    TextMessage receivedMessage = (TextMessage) objectReadFromServer;
+
+                                    if (serverHasSentAQuitResponse(receivedMessage.messageContents)) {
                                         isRunning = false;
+                                    } else {
+                                        System.out.println(receivedMessage);
                                     }
-
-                                    System.out.println(receivedMessage);
                                 }
-
                             }
                         }
                     } catch (IOException | ClassNotFoundException e) {
                         e.printStackTrace();
                     }
 
-
                 }).start();
     }
+
+    private void serialiseToServer(TextMessage messageFromKeyboardInput) throws IOException {
+        objectOutputStream.writeObject(messageFromKeyboardInput);
+        objectOutputStream.flush();
+    }
+
+    private void attemptNicknameRegistration() throws IOException {
+        TextMessage nicknameToBeRegistered = new TextMessage(nickname, nickname);
+        objectOutputStream.writeObject(nicknameToBeRegistered);
+        objectOutputStream.flush();
+    }
+
+
 }

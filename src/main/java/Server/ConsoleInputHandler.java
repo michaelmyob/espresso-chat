@@ -45,7 +45,6 @@ public class ConsoleInputHandler implements Runnable, InputHandler {
 
                     messageReceivedFromClient = deserialisedMessage.messageContents;
 
-                    System.out.println(messageReceivedFromClient);
                     processClientsSelection(messageReceivedFromClient);
                 }
             }
