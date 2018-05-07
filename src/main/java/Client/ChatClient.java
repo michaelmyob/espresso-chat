@@ -60,9 +60,7 @@ public class ChatClient implements Client {
             e.printStackTrace();
         }
         finally {
-
-            //TODO - upon client "QUIT" the server crashes - need to close stream?
-
+            System.out.println("Thank you for using Espresso Chat.\nQuitting now...");
             System.exit(0);
         }
     }
@@ -83,17 +81,10 @@ public class ChatClient implements Client {
 
                             Object objectReadFromServer = objectInputStream.readObject();
 
-                            if (objectReadFromServer != null) {
+                            if (objectReadFromServer instanceof TextMessage) {
 
-                                if (objectReadFromServer instanceof TextMessage) {
-                                    TextMessage receivedMessage = (TextMessage) objectReadFromServer;
-
-                                    if (serverHasSentAQuitResponse(receivedMessage.messageContents)) {
-                                        isRunning = false;
-                                    } else {
-                                        System.out.println(receivedMessage);
-                                    }
-                                }
+                                TextMessage receivedMessage = (TextMessage) objectReadFromServer;
+                                System.out.println(receivedMessage);
                             }
                         }
                     } catch (IOException | ClassNotFoundException e) {

@@ -15,6 +15,7 @@ public class ConsoleInputHandler implements Runnable, InputHandler {
     private final String SERVER_MENU_OPTION_1 = "LIST";
     private final String SERVER_MENU_OPTION_2 = "SEND";
     private final String SERVER_MENU_OPTION_3 = "QUIT";
+    private boolean isRunning = true;
 
     private MessageChannel messageChannel;
     private String connectedClientsNickname;
@@ -37,27 +38,19 @@ public class ConsoleInputHandler implements Runnable, InputHandler {
             sendResponse("Please choose from options below:");
             sendResponse(displayOptions());
 
-            while (true) {
-
-                if (!messageChannel.getSocket().isClosed() && messageChannel.getSocket() != null) {
-
-                    deserialisedMessage = (TextMessage) messageChannel.getInputStream().readObject();
-
-                    messageReceivedFromClient = deserialisedMessage.messageContents;
-
-                    processClientsSelection(messageReceivedFromClient);
-                }
+            while (isRunning) {
+                deserialisedMessage = (TextMessage) messageChannel.getInputStream().readObject();
+                messageReceivedFromClient = deserialisedMessage.messageContents;
+                processClientsSelection(messageReceivedFromClient);
             }
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException e) {
+            //TODO - add logger here - client has disconnected
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } finally {
-            hashMapDataStoreHandler.removeClient(messageChannel);
             Thread.currentThread().interrupt();
-            messageChannel.closeStreams();
-
-            sendResponse("shutting down now...");
-            System.exit(0);
-
+            hashMapDataStoreHandler.removeClient(messageChannel);
+            messageChannel.closeConnection();
             // TODO - Fix this quitting the thread @ the server level
         }
     }
@@ -112,11 +105,7 @@ public class ConsoleInputHandler implements Runnable, InputHandler {
             sendResponse("Message '" + messageToBeSent + "' was sent to " + destinationMessageChannel.clientNickName);
 
         } else if (clientResponse.equals(SERVER_MENU_OPTION_3)) {
-            sendResponse("Thank you for using Espresso Chat.\nQuitting now...");
-            hashMapDataStoreHandler.removeClient(messageChannel);
-
-            messageChannel.closeStreams();
-            messageChannel.getSocket().close();
+            isRunning = false;
         }
         else {
             sendResponse("Invalid option selected, please try again!\n");

@@ -16,10 +16,10 @@ public class MessageChannel {
 
     public MessageChannel(Socket socket) {
         this.socket = socket;
-        intialiseStreams();
+        initialiseStreams();
     }
 
-    private void intialiseStreams() {
+    private void initialiseStreams() {
         try {
             this.objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             this.objectInputStream = new ObjectInputStream(socket.getInputStream());
@@ -28,10 +28,11 @@ public class MessageChannel {
         }
     }
 
-    public void closeStreams() {
+    public void closeConnection() {
         try {
             this.objectOutputStream.close();
             this.objectInputStream.close();
+            this.socket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -48,4 +49,5 @@ public class MessageChannel {
     public ObjectOutputStream getOutputStream() {
         return this.objectOutputStream;
     }
+
 }

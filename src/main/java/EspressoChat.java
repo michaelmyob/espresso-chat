@@ -1,13 +1,26 @@
+import Comms.TextMessageSender;
+import Data.HashMapDataStore;
+import Data.HashMapDataStoreHandler;
 import Interfaces.Client;
+import Interfaces.DataStoreHandler;
+import Interfaces.MessageSender;
 import Interfaces.Server;
 import Client.ChatClient;
 import Server.ChatServer;
+
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class EspressoChat {
 
     public static void main(String[] args) {
         if (args.length == 1) {
 
+            ExecutorService numberOfServerThreadsAvailable = Executors.newFixedThreadPool(20);
+            Map listOfClients = HashMapDataStore.getInstance().getClientsMap();
+            DataStoreHandler dataStoreHandler = new HashMapDataStoreHandler(listOfClients);
+            MessageSender messageSender = new TextMessageSender();
             Server server = new ChatServer(Integer.parseInt(args[0]));
             server.run();
 

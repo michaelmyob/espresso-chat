@@ -10,6 +10,7 @@ import Interfaces.Server;
 import Comms.MessageChannel;
 import Message.TextMessage;
 
+import javax.xml.crypto.Data;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -27,23 +28,22 @@ public class ChatServer implements Server {
     private ExecutorService numberOfServerThreadsAvailable;
     private DataStoreHandler dataStoreHandler;
     private MessageSender messageSender;
-    private MessageChannel messageChannel;
 
-    public ChatServer(int port) {
+    public ChatServer(int port, ExecutorService a, DataStoreHandler b, MessageSender c) {
         if (port == 0) {
             this.port = DEFAULT_PORT;
         } else {
             this.port = port;
         }
-        initialise();
+//        initialise();
     }
 
-    private void initialise() {
-        numberOfServerThreadsAvailable = Executors.newFixedThreadPool(NUM_OF_SERVER_THREADS);
-        Map listOfClients = HashMapDataStore.getInstance().getClientsMap();
-        dataStoreHandler = new HashMapDataStoreHandler(listOfClients);
-        messageSender = new TextMessageSender();
-    }
+//    private void initialise() {
+//        numberOfServerThreadsAvailable = Executors.newFixedThreadPool(NUM_OF_SERVER_THREADS);
+//        Map listOfClients = HashMapDataStore.getInstance().getClientsMap();
+//        dataStoreHandler = new HashMapDataStoreHandler(listOfClients);
+//        messageSender = new TextMessageSender();
+//    }
 
     public void run() {
 
@@ -55,14 +55,14 @@ public class ChatServer implements Server {
 
                 Socket incomingConnection = socket.accept();
 
-                messageChannel = new MessageChannel(incomingConnection);
+                MessageChannel messageChannel = new MessageChannel(incomingConnection);
 
                 Message clientMessage = readClientNickName(messageChannel.getInputStream());
                 TextMessage clientNicknameMessageObject = (TextMessage) clientMessage;
                 String clientNickname = clientNicknameMessageObject.messageContents;
                 messageChannel.addNicknameToChannel(clientNickname);
 
-                attemptClientRegistration(incomingConnection);
+                attemptClientRegistration(messageChannel);
             }
 
         } catch (IOException e) {
@@ -88,22 +88,22 @@ public class ChatServer implements Server {
         return null;
     }
 
-    private void attemptClientRegistration(Socket incomingConnection) throws IOException {
+    private void attemptClientRegistration(MessageChannel messageChannel) throws IOException {
 
-        boolean clientCanBeRegistered = dataStoreHandler.addClient(this.messageChannel);
+        boolean clientCanBeRegistered = dataStoreHandler.addClient(messageChannel);
 
         if (clientCanBeRegistered) {
-            createClientHandler();
+            createClientHandler(messageChannel);
         }
         else {
             Message msg = new TextMessage("server", SERVER_QUIT_RESPONSE);
-            messageSender.send(msg, this.messageChannel);
-            incomingConnection.close();
+            messageSender.send(msg, messageChannel);
+            messageChannel.closeConnection();
         }
     }
 
-    private void createClientHandler() {
-        ConsoleInputHandler consoleInputHandler = new ConsoleInputHandler(this.messageChannel, dataStoreHandler, messageSender);
+    private void createClientHandler(MessageChannel messageChannel) {
+        ConsoleInputHandler consoleInputHandler = new ConsoleInputHandler(messageChannel, dataStoreHandler, messageSender);
         numberOfServerThreadsAvailable.submit(consoleInputHandler);
     }
 }
