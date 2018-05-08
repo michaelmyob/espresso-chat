@@ -1,8 +1,5 @@
 package Server;
 
-import Comms.TextMessageSender;
-import Data.HashMapDataStore;
-import Data.HashMapDataStoreHandler;
 import Interfaces.DataStoreHandler;
 import Interfaces.Message;
 import Interfaces.MessageSender;
@@ -10,40 +7,36 @@ import Interfaces.Server;
 import Comms.MessageChannel;
 import Message.TextMessage;
 
-import javax.xml.crypto.Data;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class ChatServer implements Server {
 
     private final int DEFAULT_PORT = 30000;
-    private final int NUM_OF_SERVER_THREADS = 20;
     private final String SERVER_QUIT_RESPONSE = "QUIT";
 
-    private int port;
-    private ExecutorService numberOfServerThreadsAvailable;
-    private DataStoreHandler dataStoreHandler;
-    private MessageSender messageSender;
+    private boolean isRunning = true;
+    private final int port;
+    private final ExecutorService threadPool;
+    private final DataStoreHandler dataStoreHandler;
+    private final MessageSender messageSender;
 
-    public ChatServer(int port, ExecutorService a, DataStoreHandler b, MessageSender c) {
+    public ChatServer(int port, ExecutorService threadPool, DataStoreHandler dataStoreHandler, MessageSender messageSender) {
         if (port == 0) {
             this.port = DEFAULT_PORT;
         } else {
             this.port = port;
         }
-//        initialise();
+        this.threadPool = threadPool;
+        this.dataStoreHandler = dataStoreHandler;
+        this.messageSender = messageSender;
     }
 
-//    private void initialise() {
-//        numberOfServerThreadsAvailable = Executors.newFixedThreadPool(NUM_OF_SERVER_THREADS);
-//        Map listOfClients = HashMapDataStore.getInstance().getClientsMap();
-//        dataStoreHandler = new HashMapDataStoreHandler(listOfClients);
-//        messageSender = new TextMessageSender();
-//    }
+    public void stop() {
+        isRunning = false;
+    }
 
     public void run() {
 
@@ -51,7 +44,7 @@ public class ChatServer implements Server {
 
         try (ServerSocket socket = new ServerSocket(port)) {
 
-            while (true) {
+            while (isRunning) {
 
                 Socket incomingConnection = socket.accept();
 
@@ -69,7 +62,7 @@ public class ChatServer implements Server {
             e.printStackTrace();
         }
         finally {
-            numberOfServerThreadsAvailable.shutdown();
+            threadPool.shutdown();
         }
     }
 
@@ -104,6 +97,6 @@ public class ChatServer implements Server {
 
     private void createClientHandler(MessageChannel messageChannel) {
         ConsoleInputHandler consoleInputHandler = new ConsoleInputHandler(messageChannel, dataStoreHandler, messageSender);
-        numberOfServerThreadsAvailable.submit(consoleInputHandler);
+        threadPool.submit(consoleInputHandler);
     }
 }

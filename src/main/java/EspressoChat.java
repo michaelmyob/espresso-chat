@@ -17,11 +17,12 @@ public class EspressoChat {
     public static void main(String[] args) {
         if (args.length == 1) {
 
-            ExecutorService numberOfServerThreadsAvailable = Executors.newFixedThreadPool(20);
+            ExecutorService threadPool = Executors.newFixedThreadPool(20);
             Map listOfClients = HashMapDataStore.getInstance().getClientsMap();
             DataStoreHandler dataStoreHandler = new HashMapDataStoreHandler(listOfClients);
             MessageSender messageSender = new TextMessageSender();
-            Server server = new ChatServer(Integer.parseInt(args[0]));
+
+            Server server = new ChatServer(Integer.parseInt(args[0]), threadPool, dataStoreHandler, messageSender);
             server.run();
 
         } else if (args.length == 3) {
