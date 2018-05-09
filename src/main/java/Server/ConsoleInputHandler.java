@@ -8,25 +8,74 @@ import Interfaces.Message;
 import Message.TextMessage;
 
 import java.io.*;
+import java.net.Socket;
 import java.util.List;
+import java.util.Optional;
 
 public class ConsoleInputHandler implements Runnable, InputHandler {
 
     private final String SERVER_MENU_OPTION_1 = "LIST";
     private final String SERVER_MENU_OPTION_2 = "SEND";
     private final String SERVER_MENU_OPTION_3 = "QUIT";
-    private boolean isRunning = true;
 
+    private final String SERVER_QUIT_RESPONSE = "SERVER_QUIT";
+
+    private boolean isRunning = true;
     private MessageChannel messageChannel;
     private String connectedClientsNickname;
     private DataStoreHandler hashMapDataStoreHandler;
     private MessageSender messageSender;
 
-    public ConsoleInputHandler(MessageChannel messageChannel, DataStoreHandler hashMapDataStoreHandler, MessageSender messageSender) {
-        this.messageChannel = messageChannel;
-        this.hashMapDataStoreHandler = hashMapDataStoreHandler;
-        this.connectedClientsNickname = messageChannel.clientNickName;
+    public ConsoleInputHandler(Socket socket, DataStoreHandler dataStoreHandler, MessageSender messageSender) {
+        this.messageChannel = new MessageChannel(socket);
+        this.hashMapDataStoreHandler = dataStoreHandler;
         this.messageSender = messageSender;
+        initialiseRegistration();
+    }
+
+    private void initialiseRegistration() {
+//        Message clientMessage = readClientNickName(messageChannel.getInputStream());
+        Optional<Message> clientMessageOptional = readClientNickName(messageChannel.getInputStream());
+        if (clientMessageOptional.isPresent()) {
+            TextMessage clientMessage = clientMessageOptional.;  //TODO FIX!
+
+        }
+
+        TextMessage clientNicknameMessageObject = (TextMessage) clientMessage;
+        connectedClientsNickname = clientNicknameMessageObject.messageContents;
+        messageChannel.addNicknameToChannel(connectedClientsNickname);
+
+        attemptClientRegistration(messageChannel);
+    }
+
+    private Optional<Message> readClientNickName(ObjectInputStream inputStream) {       //TODO - Reader class
+
+        try {
+            Object clientNickname = inputStream.readObject();
+            if (clientNickname instanceof TextMessage) {
+//                return (TextMessage) clientNickname;
+                return Optional.of((TextMessage) clientNickname);
+            }
+        }
+        catch (ClassNotFoundException | IOException e) {
+            e.printStackTrace();
+        }
+//        return null;
+        return Optional.empty();
+    }
+
+    public boolean attemptClientRegistration(MessageChannel messageChannel) {
+
+        boolean clientCanBeRegistered = hashMapDataStoreHandler.addClient(messageChannel);
+
+        if (clientCanBeRegistered) {
+            return true;
+        } else {
+            sendResponse(SERVER_QUIT_RESPONSE);
+            Thread.currentThread().interrupt();
+            messageChannel.closeConnection();
+            return false;
+        }
     }
 
     public void run() {
@@ -84,6 +133,9 @@ public class ConsoleInputHandler implements Runnable, InputHandler {
     private void processClientsSelection(String messageReceivedFromClient) throws IOException, ClassNotFoundException {
 
         String clientResponse = messageReceivedFromClient.toUpperCase();
+
+
+        //TODO - constants? Rules class
 
         if (clientResponse.equals(SERVER_MENU_OPTION_1)) {
             sendResponse(listAllClientsOnline());

@@ -1,11 +1,8 @@
 package Server;
 
 import Interfaces.DataStoreHandler;
-import Interfaces.Message;
 import Interfaces.MessageSender;
 import Interfaces.Server;
-import Comms.MessageChannel;
-import Message.TextMessage;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -15,7 +12,6 @@ import java.util.concurrent.ExecutorService;
 public class ChatServer implements Server {
 
     private final int DEFAULT_PORT = 30000;
-    private final String SERVER_QUIT_RESPONSE = "QUIT";
 
     private boolean isRunning = true;
     private final int port;
@@ -48,16 +44,8 @@ public class ChatServer implements Server {
             while (isRunning) {
 
                 Socket incomingConnection = socket.accept();
-
-                MessageChannel messageChannel = new MessageChannel(incomingConnection);
-
-                Message clientMessage = readClientNickName(messageChannel.getInputStream());
-                TextMessage clientNicknameMessageObject = (TextMessage) clientMessage;
-                String clientNickname = clientNicknameMessageObject.messageContents;
-                messageChannel.addNicknameToChannel(clientNickname);
-
-                attemptClientRegistration(messageChannel);
-            }
+                ConsoleInputHandler consoleInputHandler = new ConsoleInputHandler(incomingConnection, dataStoreHandler, messageSender);
+                threadPool.submit(consoleInputHandler);            }
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -65,39 +53,5 @@ public class ChatServer implements Server {
         finally {
             threadPool.shutdown();
         }
-    }
-
-
-    private Message readClientNickName(ObjectInputStream inputStream) {
-
-        try {
-            Object clientNickname = inputStream.readObject();
-            if (clientNickname instanceof TextMessage) {
-                return (TextMessage) clientNickname;
-            }
-        }
-        catch (ClassNotFoundException | IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    private void attemptClientRegistration(MessageChannel messageChannel) throws IOException {
-
-        boolean clientCanBeRegistered = dataStoreHandler.addClient(messageChannel);
-
-        if (clientCanBeRegistered) {
-            createClientHandler(messageChannel);
-        }
-        else {
-            Message msg = new TextMessage("server", SERVER_QUIT_RESPONSE);
-            messageSender.send(msg, messageChannel);
-            messageChannel.closeConnection();
-        }
-    }
-
-    private void createClientHandler(MessageChannel messageChannel) {
-        ConsoleInputHandler consoleInputHandler = new ConsoleInputHandler(messageChannel, dataStoreHandler, messageSender);
-        threadPool.submit(consoleInputHandler);
     }
 }
