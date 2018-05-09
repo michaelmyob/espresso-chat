@@ -79,38 +79,13 @@ public class ChatApplicationTest {
 
 
 
-
-//         connectAClient();
-//         connectAClient();
-//         connectAClient();
-//         connectAClient();
-
-//         ChatClient client1 = new ChatClient("localhost", port, "a");
-//         client1.startClient();
-
-//        Socket clientSocket = new Socket("localhost", port);
-//        MessageChannel messageChannel = new MessageChannel(clientSocket);
-//        messageChannel.addNicknameToChannel("f");
-//
-//        dataStoreHandler.addClient(messageChannel);
-
         Socket clientSocket = new Socket("localhost", port);
-        ObjectOutputStream clientOutput = new ObjectOutputStream(clientSocket.getOutputStream());
-        clientOutput.flush();
-        clientOutput.writeObject(new TextMessage("a", "a"));
-        clientOutput.flush();
+        MessageChannel messageChannel = new MessageChannel(clientSocket);
+        messageChannel.addNicknameToChannel("f");
 
-        Socket clientSocket2 = new Socket("localhost", port);
-        ObjectOutputStream clientOutput2 = new ObjectOutputStream(clientSocket2.getOutputStream());
-        clientOutput2.flush();
-        clientOutput2.writeObject(new TextMessage("b", "b"));
-        clientOutput2.flush();
+        dataStoreHandler.addClient(messageChannel);
 
-//        System.out.println(dataStoreHandler.getClient("a"));
         System.out.println(dataStoreHandler.getAllClients());
 
-
-//        Interfaces.Message msg = new Message.TextMessage("Hi there!");
-//        assertTrue(server.send("sampleClient", msg));
     }
 }
