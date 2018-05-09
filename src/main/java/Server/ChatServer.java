@@ -35,6 +35,7 @@ public class ChatServer implements Server {
     }
 
     public void stop() {
+        System.out.println("Flagging server to stop now... Stopping now");
         isRunning = false;
     }
 
