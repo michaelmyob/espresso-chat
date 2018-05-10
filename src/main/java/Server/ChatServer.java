@@ -45,7 +45,8 @@ public class ChatServer implements Server {
 
                 Socket incomingConnection = socket.accept();
                 ConsoleInputHandler consoleInputHandler = new ConsoleInputHandler(incomingConnection, dataStoreHandler, messageSender);
-                threadPool.submit(consoleInputHandler);            }
+                threadPool.submit(consoleInputHandler);
+            }
 
         } catch (IOException e) {
             e.printStackTrace();

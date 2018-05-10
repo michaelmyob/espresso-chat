@@ -18,8 +18,8 @@ public class EspressoChat {
         if (args.length == 1) {
 
             ExecutorService threadPool = Executors.newFixedThreadPool(20);
-            Map listOfClients = HashMapDataStore.getInstance().getClientsMap();
-            DataStoreHandler dataStoreHandler = new HashMapDataStoreHandler(listOfClients);
+//            Map listOfClients =
+            DataStoreHandler dataStoreHandler = new HashMapDataStoreHandler(HashMapDataStore.getInstance().getClientsMap());
             MessageSender messageSender = new TextMessageSender();
 
             Server server = new ChatServer(Integer.parseInt(args[0]), threadPool, dataStoreHandler, messageSender);

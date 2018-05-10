@@ -10,9 +10,6 @@ public class MessageChannel {
     private ObjectOutputStream objectOutputStream;
     private ObjectInputStream objectInputStream;
 
-    public Socket getSocket() {
-        return socket;
-    }
 
     public MessageChannel(Socket socket) {
         this.socket = socket;
@@ -20,12 +17,12 @@ public class MessageChannel {
     }
 
     private void initialiseStreams() {
-        try {
-            this.objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-            this.objectInputStream = new ObjectInputStream(socket.getInputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            this.objectInputStream = new ObjectInputStream(socket.getInputStream());
+//           // this.objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
 
     public void closeConnection() {
@@ -42,12 +39,12 @@ public class MessageChannel {
         this.clientNickName = clientNickName;
     }
 
-    public ObjectInputStream getInputStream() {
-       return this.objectInputStream;
+    public ObjectInputStream getInputStream() throws IOException {
+       return new ObjectInputStream(socket.getInputStream());
     }
 
-    public ObjectOutputStream getOutputStream() {
-        return this.objectOutputStream;
+    public ObjectOutputStream getOutputStream() throws IOException {
+        return new ObjectOutputStream(socket.getOutputStream());
     }
 
 }

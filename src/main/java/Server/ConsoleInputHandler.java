@@ -26,20 +26,15 @@ public class ConsoleInputHandler implements Runnable, InputHandler {
     private DataStoreHandler hashMapDataStoreHandler;
     private MessageSender messageSender;
 
-    public ConsoleInputHandler(Socket socket, DataStoreHandler dataStoreHandler, MessageSender messageSender) {
+    public ConsoleInputHandler(Socket socket, DataStoreHandler dataStoreHandler, MessageSender messageSender) throws IOException {
         this.messageChannel = new MessageChannel(socket);
         this.hashMapDataStoreHandler = dataStoreHandler;
         this.messageSender = messageSender;
         initialiseRegistration();
     }
 
-    private void initialiseRegistration() {
-//        Message clientMessage = readClientNickName(messageChannel.getInputStream());
-        Optional<Message> clientMessageOptional = readClientNickName(messageChannel.getInputStream());
-        if (clientMessageOptional.isPresent()) {
-            TextMessage clientMessage = clientMessageOptional.;  //TODO FIX!
-
-        }
+    private void initialiseRegistration() throws IOException {
+        Message clientMessage = readClientNickName(messageChannel.getInputStream());
 
         TextMessage clientNicknameMessageObject = (TextMessage) clientMessage;
         connectedClientsNickname = clientNicknameMessageObject.messageContents;
@@ -48,20 +43,18 @@ public class ConsoleInputHandler implements Runnable, InputHandler {
         attemptClientRegistration(messageChannel);
     }
 
-    private Optional<Message> readClientNickName(ObjectInputStream inputStream) {       //TODO - Reader class
+    private Message readClientNickName(ObjectInputStream inputStream) {       //TODO - Reader class
 
         try {
             Object clientNickname = inputStream.readObject();
             if (clientNickname instanceof TextMessage) {
-//                return (TextMessage) clientNickname;
-                return Optional.of((TextMessage) clientNickname);
+                return (TextMessage) clientNickname;
             }
         }
         catch (ClassNotFoundException | IOException e) {
             e.printStackTrace();
         }
-//        return null;
-        return Optional.empty();
+        return null;
     }
 
     public boolean attemptClientRegistration(MessageChannel messageChannel) {
